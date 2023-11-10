@@ -5,7 +5,7 @@ import re
 api_key = 'AIzaSyClvvMYcdHGu4K_zoVlOvIhf5Z-ykT9IIE'
 
 # Replace with the YouTube video URL you want to retrieve comments from
-video_url = 'https://www.youtube.com/watch?v=0bLptFf3EEE'
+video_url =input('input youtube url:')
 
 # Extract the video ID from the URL
 match = re.search(r'v=([A-Za-z0-9_-]+)', video_url)
@@ -20,7 +20,7 @@ if match:
         if response.status_code == 200:
             data = response.json()
             comments = data['items']
-
+            
             # Iterate through the comments and display author and comment text
             for comment in comments:
                 snippet = comment['snippet']['topLevelComment']['snippet']
