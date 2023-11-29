@@ -64,26 +64,20 @@ if video_id:
                 print('Failed to retrieve video details. Check your API key and video ID.')
                 # Iterate through the comments and display author and comment text
           
-            num_comments = int(input('Enter the number of comments to display: '))
 
             # Iterate through the comments and display the specified number
             
 
 # Iterate through the comments and display the specified number
-            for i, comment in enumerate(comments):
-                if i < num_comments:
-                 snippet = comment['snippet']['topLevelComment']['snippet']
-                author = snippet.get('authorDisplayName', 'Unknown Author')
-                text = snippet.get('textDisplay', 'No text')
-                print(f'{author} - {text}\n')
+            
 
-                
             for comment in comments:
                 snippet = comment['snippet']['topLevelComment']['snippet']
                 author = snippet['authorDisplayName']
                 text = snippet['textDisplay']
-                print(f' {author} -  {text}\n')
-                print(f'{author} - {text}\n')
+                all_comment= (f' {author} -  {text}\n')
+                print(all_comment)
+         
 
         else:
             print('Failed to retrieve comments. Check your API key and video ID.')
@@ -93,3 +87,8 @@ if video_id:
 
 else:
     print('Video ID not found in the URL.')
+
+
+
+
+open api = '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'
