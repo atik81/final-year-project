@@ -1,94 +1,63 @@
 import requests
 import re
-
+import creds
 def get_video_id(video_url):
     match = re.search(r'v=([A-Za-z0-9_-]+)', video_url)
     if match:
         return match.group(1)
     else:
         return None
-
-# Youtube API key
-api_key = 'AIzaSyClvvMYcdHGu4K_zoVlOvIhf5Z-ykT9IIE'
-
-# Replace with the YouTube video URL you want to retrieve comments from
-video_url = input('input youtube url:')
-video_id = get_video_id(video_url)
-
-# Extract the video ID from the URL
-if video_id:
-
-    try:
-        # Make an API request to retrieve comments
-        video_url = f'https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId={video_id}&key={api_key}'
-        video_response = requests.get(video_url)
-
-        if video_response.status_code == 200:
-            data = video_response.json()
-            comments = data['items']
-
-        if video_response.status_code == 200:
-            video_data = video_response.json()['items'][0]['snippet']
-          
-            
+def video_and_channel_details(video_url, api_key):
+    video_id = get_video_id(video_url)
+    if video_id:
+        try:
+            details = {}
 
             # Get video details
-            video_url = f'https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id={video_id}&key={api_key}'
-            video_response = requests.get(video_url)
+            video_details_url = f'https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id={video_id}&key={creds.api_key}'
+            video_response = requests.get(video_details_url)
 
             if video_response.status_code == 200:
-                video_data = video_response.json()['items'][0]['statistics']
-                like_count = video_data.get('likeCount', 0)
-                title = video_response.json()['items'][0]['snippet']['title']
-                print('\033[91m\033[1m' + f'Video Title: {title}' + '\033[0m')
-
-                print('\033[91m\033[1m' + f'Like Count: {like_count}'  + '\033[0m')
-
-                channel_id = video_response.json()['items'][0]['snippet']['channelId']
+                video_data = video_response.json()['items'][0]
+                details['video_title'] = video_data['snippet']['title']
+                details['like_count'] = video_data['statistics'].get('likeCount', 0)
 
                 # Get channel details
-                channel_url = f'https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id={channel_id}&key={api_key}'
+                channel_id = video_data['snippet']['channelId']
+                channel_url = f'https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id={channel_id}&key={creds.api_key}'
                 channel_response = requests.get(channel_url)
 
                 if channel_response.status_code == 200:
-                    channel_details = channel_response.json()['items'][0]['snippet']
-                    subscriber_count = channel_response.json()['items'][0]['statistics']['subscriberCount']
-                    
-                    print('\033[91m\033[1m' + f'Channel Title: {channel_details["title"]}'+ '\033[0m')
-                    print('\033[91m\033[1m' + f'Subscriber Count: {subscriber_count}'+ '\033[0m')
+                    channel_data = channel_response.json()['items'][0]
+                    details['channel_title'] = channel_data['snippet']['title']
+                    details['subscriber_count'] = channel_data['statistics'].get('subscriberCount', 0)
 
-                else:
-                    print('Failed to retrieve channel details. Check your API key and channel ID.')
-
+                return details
             else:
                 print('Failed to retrieve video details. Check your API key and video ID.')
-                # Iterate through the comments and display author and comment text
-          
+        except Exception as e:
+            print(f'An error occurred: {e}')
+    else:
+        print('Video ID not found in the URL.')
+    return {}
+def fetch_comments(video_url, api_key):
+    video_id = get_video_id(video_url)
+    if video_id:
+        try:
+            comments_url = f'https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId={video_id}&key={api_key}'
+            response = requests.get(comments_url)
+            if response.status_code == 200:
+                data = response.json()
+                comments = data['items']
+                return comments
+            else:
+                print('Failed to retrieve comments. Check your API key and video ID.')
+        except Exception as e:
+            print(f'An error occurred: {e}')
+    else:
+        print('Video ID not found in the URL.')
+    return []
 
-            # Iterate through the comments and display the specified number
-            
-
-# Iterate through the comments and display the specified number
-            
-
-            for comment in comments:
-                snippet = comment['snippet']['topLevelComment']['snippet']
-                author = snippet['authorDisplayName']
-                text = snippet['textDisplay']
-                all_comment= (f' {author} -  {text}\n')
-                print(all_comment)
-         
-
-        else:
-            print('Failed to retrieve comments. Check your API key and video ID.')
-
-    except Exception as e:
-        print(f'An error occurred: {e}')
-
-else:
-    print('Video ID not found in the URL.')
-
+# Usage Example
 
 
-
-open api = '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'

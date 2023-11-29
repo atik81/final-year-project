@@ -22,7 +22,6 @@ if video_id:
         # Make an API request to retrieve comments
         video_url = f'https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId={video_id}&key={api_key}'
         video_response = requests.get(video_url)
-        
 
         if video_response.status_code == 200:
             data = video_response.json()
@@ -70,20 +69,14 @@ if video_id:
             
 
 # Iterate through the comments and display the specified number
-            for comment in comments:
-                
-                snippet = comment['snippet']['topLevelComment']['snippet']
-                author = snippet.get('authorDisplayName', 'Unknown Author')
-                text = snippet.get('textDisplay', 'No text')
-                print(f'{author} - {text}\n')
+            comments_list = []
 
-                
             for comment in comments:
                 snippet = comment['snippet']['topLevelComment']['snippet']
                 author = snippet['authorDisplayName']
                 text = snippet['textDisplay']
-                print(f' {author} -  {text}\n')
-                print(f'{author} - {text}\n')
+                all_comment= (f' {author} -  {text}\n')
+                print(all_comment)
 
         else:
             print('Failed to retrieve comments. Check your API key and video ID.')
@@ -93,3 +86,10 @@ if video_id:
 
 else:
     print('Video ID not found in the URL.')
+
+
+
+
+
+
+open api = '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'
