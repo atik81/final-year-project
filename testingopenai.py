@@ -1,7 +1,8 @@
 import openai
+import os
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 def analyze_sentiment(text):
-    openai.api_key = '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'  # Replace with your actual OpenAI API key
 
     response = openai.Completion.create(
       engine="text-davinci-003",  # You can change the model as needed
@@ -15,3 +16,6 @@ def analyze_sentiment(text):
 test_text = "I love spending time with my family on the weekends!"
 result = analyze_sentiment(test_text)
 print(f"Sentiment Analysis Result: {result}")
+
+
+
