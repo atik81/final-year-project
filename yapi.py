@@ -9,7 +9,7 @@ def get_video_id(video_url):
         return None
 
 # Youtube API key
-api_key = 'AIzaSyClvvMYcdHGu4K_zoVlOvIhf5Z-ykT9IIE'
+api_key = '------'
 
 # Replace with the YouTube video URL you want to retrieve comments from
 video_url = input('input youtube url:')
@@ -92,4 +92,3 @@ else:
 
 
 
-open api = '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'

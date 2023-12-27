@@ -1,4 +1,4 @@
-api_key = 'AIzaSyClvvMYcdHGu4K_zoVlOvIhf5Z-ykT9IIE'  # Your YouTube API key
+api_key = 'AIzaSyCl------'  # Your YouTube API key
 import openai
 
-openai.api_key = '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' # Replace with your actual OpenAI API key
+openai.api_key = '-----' # Replace with your actual OpenAI API key

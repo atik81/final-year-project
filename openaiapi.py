@@ -10,7 +10,8 @@ def open_py_file():
 open_py_file()
 
 # Set your OpenAI API key
-openai.api_key = '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' # Replace with your actual OpenAI API key
+import os
+openai.api_key = os.getenv('OPENAI_API_KEY')
 def analyze_sentiment(comments,batch_size=10, delay=5):
     sentiments = []
     for i in range(0, len(comments), batch_size):

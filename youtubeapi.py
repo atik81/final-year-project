@@ -1,6 +1,11 @@
 import requests
 import re
-import creds
+from dotenv import load_dotenv
+
+def configure():
+    load_dotenv()
+api_key = 'AIzaSyClvvMYcdHGu4K_zoVlOvIhf5Z-ykT9IIE'
+
 def get_video_id(video_url):
     match = re.search(r'v=([A-Za-z0-9_-]+)', video_url)
     if match:
