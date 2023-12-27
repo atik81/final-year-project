@@ -1,6 +1,15 @@
 import requests
 import re
+from textblob import TextBlob
+import emoji
+api_key = 'AIzaSyClvvMYcdHGu4K_zoVlOvIhf5Z-ykT9IIE'
 
+
+
+
+
+
+# Function to get video ID from YouTube URL
 def get_video_id(video_url):
     match = re.search(r'v=([A-Za-z0-9_-]+)', video_url)
     if match:
@@ -8,87 +17,102 @@ def get_video_id(video_url):
     else:
         return None
 
-# Youtube API key
-api_key = '------'
+# Function to clean text (remove HTML tags and emojis)
+def clean_text(text):
+    clean_text = re.sub(r'<.*?>', '', text)
+    return clean_text
 
-# Replace with the YouTube video URL you want to retrieve comments from
-video_url = input('input youtube url:')
+# Function to analyze sentiment of a comment
+def analyze_sentiment(comment):
+    analysis = TextBlob(comment)
+    sentiment_score = analysis.sentiment.polarity
+    if sentiment_score > 0:
+        return 'Positive'
+    elif sentiment_score < 0:
+        return 'Negative'
+    else:
+        return 'Neutral'
+
+# Input YouTube video URL
+video_url = input('Input YouTube URL: ')
 video_id = get_video_id(video_url)
 
-# Extract the video ID from the URL
 if video_id:
-
     try:
-        # Make an API request to retrieve comments
-        video_url = f'https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId={video_id}&key={api_key}'
-        video_response = requests.get(video_url)
+        # Initialize sentiment counters and total comment count
+        positive_count = 0
+        negative_count = 0
+        neutral_count = 0
+        total_comments = 0
+        top_comments = []
 
-        if video_response.status_code == 200:
-            data = video_response.json()
-            comments = data['items']
+        # Retrieve all video comments
+        all_comments = []
+        next_page_token = None
 
-        if video_response.status_code == 200:
-            video_data = video_response.json()['items'][0]['snippet']
-          
+        while True:
+            video_comments_url = f'https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId={video_id}&key={api_key}&maxResults=100'
+            if next_page_token:
+                video_comments_url += f'&pageToken={next_page_token}'
             
+            video_comments_response = requests.get(video_comments_url)
 
-            # Get video details
-            video_url = f'https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id={video_id}&key={api_key}'
-            video_response = requests.get(video_url)
+            if video_comments_response.status_code == 200:
+                data = video_comments_response.json()
+                comments = data.get('items', [])
+                all_comments.extend(comments)
 
-            if video_response.status_code == 200:
-                video_data = video_response.json()['items'][0]['statistics']
-                like_count = video_data.get('likeCount', 0)
-                title = video_response.json()['items'][0]['snippet']['title']
-                print('\033[91m\033[1m' + f'Video Title: {title}' + '\033[0m')
+                next_page_token = data.get('nextPageToken')
 
-                print('\033[91m\033[1m' + f'Like Count: {like_count}'  + '\033[0m')
-
-                channel_id = video_response.json()['items'][0]['snippet']['channelId']
-
-                # Get channel details
-                channel_url = f'https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id={channel_id}&key={api_key}'
-                channel_response = requests.get(channel_url)
-
-                if channel_response.status_code == 200:
-                    channel_details = channel_response.json()['items'][0]['snippet']
-                    subscriber_count = channel_response.json()['items'][0]['statistics']['subscriberCount']
-                    
-                    print('\033[91m\033[1m' + f'Channel Title: {channel_details["title"]}'+ '\033[0m')
-                    print('\033[91m\033[1m' + f'Subscriber Count: {subscriber_count}'+ '\033[0m')
-
-                else:
-                    print('Failed to retrieve channel details. Check your API key and channel ID.')
+                if not next_page_token:
+                    break
 
             else:
-                print('Failed to retrieve video details. Check your API key and video ID.')
-                # Iterate through the comments and display author and comment text
-          
+                print('Failed to retrieve comments. Check your API key and video ID.')
+                break
 
-            # Iterate through the comments and display the specified number
-            
+        # Iterate through and analyze all comments
+        for comment in all_comments:
+            snippet = comment['snippet']['topLevelComment']['snippet']
+            author = snippet['authorDisplayName']
+            text = snippet['textDisplay']
+            cleaned_comment = clean_text(text)
+            sentiment = analyze_sentiment(cleaned_comment)
 
-# Iterate through the comments and display the specified number
-            comments_list = []
+            # Update sentiment counters
+            if sentiment == 'Positive':
+                positive_count += 1
+            elif sentiment == 'Negative':
+                negative_count += 1
+            else:
+                neutral_count += 1
 
-            for comment in comments:
-                snippet = comment['snippet']['topLevelComment']['snippet']
-                author = snippet['authorDisplayName']
-                text = snippet['textDisplay']
-                all_comment= (f' {author} -  {text}\n')
-                print(all_comment)
+            # Count total comments
+            total_comments += 1
 
-        else:
-            print('Failed to retrieve comments. Check your API key and video ID.')
+            # Store comments for top sentiment analysis
+            top_comments.append((author, cleaned_comment, sentiment))
+
+        # Sort the top comments by sentiment score (positive sentiment first)
+        top_comments.sort(key=lambda x: x[2] == 'Positive', reverse=True)
+        top_comments = top_comments[:10]  # Select the top 10 comments
+
+        # Print top sentiment comments
+        print('Top 10  Sentiment Comments:')
+        for i, (author, comment, sentiment) in enumerate(top_comments):
+            print(f'{i + 1}. Author: {author}')
+            print(f'   Comment: {comment}')
+            print(f'   Sentiment: {sentiment}')
+            print('-------------------')
+
+        # Print total sentiment counts and total comment count
+        print(f'Total Positive Comments: {positive_count}')
+        print(f'Total Negative Comments: {negative_count}')
+        print(f'Total Neutral Comments: {neutral_count}')
+        print(f'Total Comments: {total_comments}')
 
     except Exception as e:
         print(f'An error occurred: {e}')
 
 else:
     print('Video ID not found in the URL.')
-
-
-
-
-
-
