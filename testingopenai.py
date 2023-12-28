@@ -3,7 +3,7 @@ import re
 from textblob import TextBlob
 import emoji
 
-api_key = 'AIzaSyClvvMYcdHGu4K_zoVlOvIhf5Z-ykT9IIE'
+api_key = 'AIzaSyCF4V_xVhqlffr-XxgbuX2ELdo93yZxqtM'
 
 # Function to get video ID from YouTube URL
 def get_video_id(video_url):
@@ -33,7 +33,7 @@ def analyze_sentiment(comment):
       sentiment += f'with Emojis: {" ".join(emojis)}'
     return sentiment
 # Replace with your YouTube API key
-api_key = 'AIzaSyClvvMYcdHGu4K_zoVlOvIhf5Z-ykT9IIE'
+api_key = 'AIzaSyCF4V_xVhqlffr-XxgbuX2ELdo93yZxqtM'
 
 
 # Input YouTube video URL

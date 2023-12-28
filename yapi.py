@@ -2,7 +2,7 @@ import requests
 import re
 from textblob import TextBlob
 import emoji
-api_key = 'AIzaSyClvvMYcdHGu4K_zoVlOvIhf5Z-ykT9IIE'
+api_key = 'AIzaSyCF4V_xVhqlffr-XxgbuX2ELdo93yZxqtM'
 
 
 
