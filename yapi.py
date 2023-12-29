@@ -1,13 +1,15 @@
+
 import requests
 import re
-from textblob import TextBlob
+import spacy
 import emoji
+from concurrent.futures import ThreadPoolExecutor
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
+nlp = spacy.load("en_core_web_sm")
+analyzer = SentimentIntensityAnalyzer()
+
 api_key = 'AIzaSyCF4V_xVhqlffr-XxgbuX2ELdo93yZxqtM'
-
-
-
-
-
 
 # Function to get video ID from YouTube URL
 def get_video_id(video_url):
@@ -21,17 +23,41 @@ def get_video_id(video_url):
 def clean_text(text):
     clean_text = re.sub(r'<.*?>', '', text)
     return clean_text
-
+    
 # Function to analyze sentiment of a comment
-def analyze_sentiment(comment):
-    analysis = TextBlob(comment)
-    sentiment_score = analysis.sentiment.polarity
-    if sentiment_score > 0:
+def analyze_sentiment_vader(comment):
+    sentiment = analyzer.polarity_scores(comment)
+    compound_score = sentiment['compound']
+    
+
+    if compound_score>= 0.05:
         return 'Positive'
-    elif sentiment_score < 0:
+    elif compound_score <= -0.05:
         return 'Negative'
     else:
         return 'Neutral'
+
+# Function to process a batch of comments
+def process_comment_batch(comments):
+    positive_count = 0
+    negative_count = 0
+    neutral_count = 0
+    total_comments = len(comments)
+
+    for comment in comments:
+        snippet = comment['snippet']['topLevelComment']['snippet']
+        text = snippet['textDisplay']
+        cleaned_comment = clean_text(text)
+        sentiment = analyze_sentiment_vader(cleaned_comment)
+
+        if sentiment == 'Positive':
+            positive_count += 1
+        elif sentiment == 'Negative':
+            negative_count += 1
+        else:
+            neutral_count += 1
+
+    return positive_count, negative_count, neutral_count, total_comments
 
 # Input YouTube video URL
 video_url = input('Input YouTube URL: ')
@@ -39,15 +65,12 @@ video_id = get_video_id(video_url)
 
 if video_id:
     try:
-        # Initialize sentiment counters and total comment count
-        positive_count = 0
-        negative_count = 0
-        neutral_count = 0
-        total_comments = 0
-        top_comments = []
-
-        # Retrieve all video comments
-        all_comments = []
+        total_comments_to_analyze =  input ('Enter the number of Comments to analyze try to get less then 10,000 comments for  quicker  result (e.g., 10000for 10,000 comments, "all" for all comments): ')
+        if total_comments_to_analyze.lower() =='all':
+            total_comments_to_analyze = float('inf')
+        else :
+            total_comments_to_analyze = int(total_comments_to_analyze)
+        all_comments = []     
         next_page_token = None
 
         while True:
@@ -60,55 +83,35 @@ if video_id:
             if video_comments_response.status_code == 200:
                 data = video_comments_response.json()
                 comments = data.get('items', [])
-                all_comments.extend(comments)
-
                 next_page_token = data.get('nextPageToken')
 
                 if not next_page_token:
                     break
-
             else:
-                print('Failed to retrieve comments. Check your API key and video ID.')
+                print(f'Failed to retrieve comments. HTTP Status Code: {video_comments_response.status_code}')
                 break
 
-        # Iterate through and analyze all comments
-        for comment in all_comments:
-            snippet = comment['snippet']['topLevelComment']['snippet']
-            author = snippet['authorDisplayName']
-            text = snippet['textDisplay']
-            cleaned_comment = clean_text(text)
-            sentiment = analyze_sentiment(cleaned_comment)
+        # Adjust batch size and max workers as needed
+        batch_size = 2000  # Increase the batch size
+        max_workers = 8    # Increase the number of workers based on your system's capacity
 
-            # Update sentiment counters
-            if sentiment == 'Positive':
-                positive_count += 1
-            elif sentiment == 'Negative':
-                negative_count += 1
-            else:
-                neutral_count += 1
+        # Split comments into batches for parallel processing
+        comment_batches = [all_comments[i:i+batch_size] for i in range(0, len(all_comments), batch_size)]
 
-            # Count total comments
-            total_comments += 1
+        # Process comment batches in parallel
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            results = list(executor.map(process_comment_batch, comment_batches))
 
-            # Store comments for top sentiment analysis
-            top_comments.append((author, cleaned_comment, sentiment))
-
-        # Sort the top comments by sentiment score (positive sentiment first)
-        top_comments.sort(key=lambda x: x[2] == 'Positive', reverse=True)
-        top_comments = top_comments[:10]  # Select the top 10 comments
-
-        # Print top sentiment comments
-        print('Top 10  Sentiment Comments:')
-        for i, (author, comment, sentiment) in enumerate(top_comments):
-            print(f'{i + 1}. Author: {author}')
-            print(f'   Comment: {comment}')
-            print(f'   Sentiment: {sentiment}')
-            print('-------------------')
+        # Aggregate results
+        total_positive = sum(result[0] for result in results)
+        total_negative = sum(result[1] for result in results)
+        total_neutral = sum(result[2] for result in results)
+        total_comments = sum(result[3] for result in results)
 
         # Print total sentiment counts and total comment count
-        print(f'Total Positive Comments: {positive_count}')
-        print(f'Total Negative Comments: {negative_count}')
-        print(f'Total Neutral Comments: {neutral_count}')
+        print(f'Total Positive Comments: {total_positive}')
+        print(f'Total Negative Comments: {total_negative}')
+        print(f'Total Neutral Comments: {total_neutral}')
         print(f'Total Comments: {total_comments}')
 
     except Exception as e:
