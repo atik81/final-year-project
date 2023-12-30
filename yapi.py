@@ -9,7 +9,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 nlp = spacy.load("en_core_web_sm")
 analyzer = SentimentIntensityAnalyzer()
 
-api_key = 'AIzaSyCF4V_xVhqlffr-XxgbuX2ELdo93yZxqtM'
+api_key = 'AIzaSyCMQt_THIlXaS-pyHF_aeItcCPhse4p3Fg'
 
 # Function to get video ID from YouTube URL
 def get_video_id(video_url):
