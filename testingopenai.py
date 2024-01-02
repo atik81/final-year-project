@@ -1,9 +1,22 @@
 import requests
 import re
-from textblob import TextBlob
+from concurrent.futures import ThreadPoolExecutor
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import emoji
 
 api_key = 'AIzaSyCF4V_xVhqlffr-XxgbuX2ELdo93yZxqtM'
+analyzer = SentimentIntensityAnalyzer()
+
+class TextStyle:
+    HEADER = '\033[95m' # Light Purple
+    OKBLUE = '\033[94m' # Blue
+    OKGREEN = '\033[92m' #green
+    OKRED = '\033[91m' #red
+    
+    OKYELLOW = '\033[93m' # YELLOW
+    ENDC = '\033[0m' # reset to default
+    BIGGER ='\033[1M'
+
 
 # Function to get video ID from YouTube URL
 def get_video_id(video_url):
@@ -19,26 +32,39 @@ def clean_text(text):
     return clean_text
 
 # Function to analyze sentiment of a comment
-def analyze_sentiment(comment):
-    analysis = TextBlob(comment)
-    sentiment_score = analysis.sentiment.polarity
-    if sentiment_score > 0:
-        return 'Positive'
-    elif sentiment_score < 0:
-        return 'Negative'
-    else:
-        return 'Neutral'
-    emojis = [c for c in comment if c in emoji.UNICODE_EMOJI]
-    if len(emojis) > 0:
-      sentiment += f'with Emojis: {" ".join(emojis)}'
-    return sentiment
-# Replace with your YouTube API key
-api_key = 'AIzaSyCF4V_xVhqlffr-XxgbuX2ELdo93yZxqtM'
+def analyze_sentiment_vader(comment):
+    sentiment = analyzer.polarity_scores(comment)
+    compound_score = sentiment['compound']
+    if compound_score > 0:
+        return  f'{TextStyle.OKGREEN}Positive{TextStyle.ENDC}'  # Green for positive
 
+    elif compound_score < 0:
+        return f'{TextStyle.OKRED}Negative{TextStyle.ENDC}'
+    else:
+        return f'{TextStyle.OKBLUE}Neutral{TextStyle.ENDC}'
+    
+def retrieve_comments(video_id, api_key, max_comments= 10):
+    comments = []
+    next_page_token =None
+    
+    while len(comments) <max_comments:
+          video_comments_url = f'https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId={video_id}&key={api_key}&maxResults=100'
+
+          if next_page_token:
+            video_comments_url += f'&pageToken={next_page_token}'
+          video_comments_response = requests.get(video_comments_url)
+          if video_comments_response.status_code == 200:
+              data = video_comments_response.json()
+              comments.extend(data.get('items', []))
+              next_page_token = data.get('nextPagetoken')
+              if not next_page_token:
+                  break
+    return comments [:max_comments]
 
 # Input YouTube video URL
 video_url = input('Input YouTube URL: ')
 video_id = get_video_id(video_url)
+
 
 if video_id:
     try:
@@ -57,9 +83,17 @@ if video_id:
             if video_details_response.status_code == 200:
                 video_data = video_details_response.json()['items'][0]['snippet']
                 like_count = video_details_response.json()['items'][0]['statistics'].get('likeCount', 0)
+                comment_count = video_details_response.json()['items'][0]['statistics'].get('commentCount', 0)
+
                 title = video_data['title']
-                print(f'Video Title: {title}')
-                print(f'Like Count: {like_count}')
+                formatted_title = f'{TextStyle.HEADER}{title}{TextStyle.ENDC}'
+                formatted_like_count = f'{TextStyle.OKGREEN}{like_count}{TextStyle.ENDC}'
+                formatted_comment_count = f'{TextStyle.OKGREEN}{comment_count}{TextStyle.ENDC}'
+
+                
+                print(f'Video Title: {formatted_title}')
+                print(f'Like Count: {formatted_like_count}')
+                print(f'Comment Count: {formatted_comment_count} ')
 
                 channel_id = video_data['channelId']
 
@@ -70,30 +104,49 @@ if video_id:
                 if channel_details_response.status_code == 200:
                     channel_details = channel_details_response.json()['items'][0]['snippet']
                     subscriber_count = channel_details_response.json()['items'][0]['statistics'].get('subscriberCount', 0)
-                    print(f'Channel Title: {channel_details["title"]}')
-                    print(f'Subscriber Count: {subscriber_count}')
+                    title = channel_details['title']
+
+                    formatted_title = f'{TextStyle.HEADER}{title}{TextStyle.ENDC}'
+                    formatted_subscriber_count = f'{TextStyle.OKGREEN}{comment_count}{TextStyle.ENDC}'
+
+
+                    
+                    print(f'Channel Title: {formatted_title}')
+                    print(f'Subscriber Count: {formatted_subscriber_count}')
 
                 else:
                     print('Failed to retrieve channel details. Check your API key and channel ID.')
 
             else:
                 print('Failed to retrieve video details. Check your API key and video ID.')
-
+            max_comments=10
+            comments = retrieve_comments(video_id,api_key, max_comments)
+            if comments: 
+                print(f'Analyzing the first {max_comments} comments ....')
+                print('--------------------------------------------------')
             # Iterate through and analyze comments
-            for comment in comments:
-                snippet = comment['snippet']['topLevelComment']['snippet']
-                author = snippet['authorDisplayName']
-                text = snippet['textDisplay']
-                cleaned_comment = clean_text(text)
-                sentiment = analyze_sentiment(cleaned_comment)
-                print(f'Author: {author}')
-                print(f'Comment: {cleaned_comment}')
-                print(f'Sentiment: {sentiment}')
-                print('-------------------')
+                for comment in comments:
+                    snippet = comment['snippet']['topLevelComment']['snippet']
+                    author = snippet['authorDisplayName']
+                    text = snippet['textDisplay']
+                    cleaned_comment = clean_text(text)
+                    sentiment = analyze_sentiment_vader(cleaned_comment)
+                    formatted_Author = f'{TextStyle.OKYELLOW}{author}{TextStyle.ENDC}'
 
-        else:
-            print('Failed to retrieve comments. Check your API key and video ID.')
 
+                    print(f'Author: {formatted_Author}')
+                    print(f'Comment: {cleaned_comment}')
+                    print(f'Sentiment: {sentiment}')
+                if len(comments) < max_comments:
+                  print (f'Only {len(comments)} comments available. To see more comments, type "See More".')
+                  see_more = input('Type "See More" to load more comments, or press Enter to exit: ')
+                  if see_more.lower() == 'see more':
+                    additional_comments = retrieve_comments(video_id, api_key, max_comments - len(comments))
+                    if additional_comments:
+                      comments.extend(additional_comments)
+                    else:
+                     print('No more comments available.')
+            
     except Exception as e:
         print(f'An error occurred: {e}')
 

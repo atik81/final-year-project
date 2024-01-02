@@ -1,9 +1,7 @@
 import requests
 import re
-from dotenv import load_dotenv
 
-def configure():
-    load_dotenv()
+
 api_key = 'AIzaSyClvvMYcdHGu4K_zoVlOvIhf5Z-ykT9IIE'
 
 def get_video_id(video_url):
