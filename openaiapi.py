@@ -118,6 +118,8 @@ if video_id:
                 print(f'Comment: {cleaned_comment}')
                 print(f'Sentiment: {sentiment}')
                 print('-------------------------')
+                
+            
 
         else:
             print('Failed to retrieve comments. Check your API key and video ID.')
