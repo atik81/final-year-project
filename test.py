@@ -1,103 +1,119 @@
 import requests
 import re
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# Analyzer and TextStyle class as before...
-
-
-# Initialize the sentiment analyzer
+# Initialize the Sentiment Analyzer
 analyzer = SentimentIntensityAnalyzer()
-
-class TextStyle:
-    HEADER = '\033[95m' # Light Purple
-    OKBLUE = '\033[94m' # Blue
-    OKGREEN = '\033[92m' # Green
-    OKRED = '\033[91m' # Red
-    OKYELLOW = '\033[93m' # Yellow
-    ENDC = '\033[0m' # Reset to default
 
 # Function to get video ID from YouTube URL
 def get_video_id(video_url):
     match = re.search(r'v=([A-Za-z0-9_-]+)', video_url)
-    if match:
-        return match.group(1)
-    else:
-        return None
+    return match.group(1) if match else None
 
 # Function to clean text (remove HTML tags)
 def clean_text(text):
-    clean_text = re.sub(r'<.*?>', '', text)
-    return clean_text
+    return re.sub(r'<.*?>', '', text)
 
-# Updated function to analyze sentiment and keep track of counts
-def analyze_sentiment_vader(comment, sentiment_counts):
+# Function to analyze sentiment of a comment
+def analyze_sentiment(comment):
     sentiment = analyzer.polarity_scores(comment)
     compound_score = sentiment['compound']
-    if compound_score > 0:
-        sentiment_counts['positive'] += 1
-        return f'{TextStyle.OKGREEN}Positive{TextStyle.ENDC}'
-    elif compound_score < 0:
-        sentiment_counts['negative'] += 1
-        return f'{TextStyle.OKRED}Negative{TextStyle.ENDC}'
+    if compound_score >= 0.05:
+        return "Positive"
+    elif compound_score <= -0.05:
+        return "Negative"
     else:
-        sentiment_counts['neutral'] += 1
-        return f'{TextStyle.OKBLUE}Neutral{TextStyle.ENDC}'
+        return "Neutral"
+# ... [previous parts of the code remain unchanged]
 
-# Function to retrieve comments
-def retrieve_comments(video_id, api_key, page_token=None):
-    comments = []
-    video_comments_url = f'https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId={video_id}&key={api_key}&maxResults=100'
-    if page_token:
-        video_comments_url += f'&pageToken={page_token}'
-    response = requests.get(video_comments_url)
+def retrieve_comments(video_id, api_key):
+    all_comments = []
+    initial_url = f'https://www.googleapis.com/youtube/v3/commentThreads?key={api_key}&textFormat=plainText&part=snippet&videoId={video_id}&maxResults=100'
+    
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_url = {executor.submit(retrieve_comments_page, initial_url): initial_url}
+        while future_to_url:
+            for future in as_completed(future_to_url):
+                comments, next_page_token = future.result()
+                all_comments.extend(comments)
+                # Commented out to avoid printing the count of retrieved comments
+                # print(f"Retrieved {len(all_comments)} comments so far...")  
+                if next_page_token and len(all_comments) < 10000:
+                    next_url = f'https://www.googleapis.com/youtube/v3/commentThreads?key={api_key}&textFormat=plainText&part=snippet&videoId={video_id}&pageToken={next_page_token}&maxResults=100'
+                    future_to_url[executor.submit(retrieve_comments_page, next_url)] = next_url
+                del future_to_url[future]
+                if len(all_comments) >= 10000:
+                    return all_comments[:10000]
+    return all_comments
+
+def analyze_comments_in_batch(comments, batch_size=100):
+    sentiment_counts = {'Positive': 0, 'Negative': 0, 'Neutral': 0}
+
+    with ThreadPoolExecutor(max_workers=20) as executor:
+        for i in range(0, len(comments), batch_size):
+            batch = comments[i:i + batch_size]
+            results = list(executor.map(analyze_sentiment, batch))
+            for sentiment in results:
+                sentiment_counts[sentiment] += 1
+            
+            # Print only the updated sentiment counts
+            print(f"Total Positive Comments: {sentiment_counts['Positive']}, "
+                  f"Total Negative Comments: {sentiment_counts['Negative']}, "
+                  f"Total Neutral Comments: {sentiment_counts['Neutral']}")
+
+  
+    return sentiment_counts
+def retrieve_comments_page(url):
+    response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
-        comments.extend(data.get('items', []))
-        next_page_token = data.get('nextPageToken', None)
-        return comments, next_page_token
+        comments = []
+        for item in data['items']:
+            comment = item['snippet']['topLevelComment']['snippet']['textDisplay']
+            comments.append(clean_text(comment))
+        return comments, data.get('nextPageToken')
     else:
-        return None, None
+        print('Failed to retrieve comments on this page, stopping.')
+        return [], None
 
-# Updated function to print comments and analyze sentiments
-def print_comments(comments, sentiment_counts):
-    for comment in comments:
-        snippet = comment['snippet']['topLevelComment']['snippet']
-        author = snippet['authorDisplayName']
-        text = snippet['textDisplay']
-        cleaned_comment = clean_text(text)
-        sentiment = analyze_sentiment_vader(cleaned_comment, sentiment_counts)
-        formatted_Author = f'{TextStyle.OKYELLOW}{author}{TextStyle.ENDC}'
+# Updated Function to retrieve up to 10,000 comments from a YouTube video
+def retrieve_comments(video_id, api_key):
+    all_comments = []
+    initial_url = f'https://www.googleapis.com/youtube/v3/commentThreads?key={api_key}&textFormat=plainText&part=snippet&videoId={video_id}&maxResults=100'
+    
+    with ThreadPoolExecutor(max_workers=10) as executor:  # Adjust max_workers as needed
+        future_to_url = {executor.submit(retrieve_comments_page, initial_url): initial_url}
+        while future_to_url:
+            for future in as_completed(future_to_url):
+                comments, next_page_token = future.result()
+                all_comments.extend(comments)
+                if next_page_token and len(all_comments) < 10000:
+                    next_url = f'https://www.googleapis.com/youtube/v3/commentThreads?key={api_key}&textFormat=plainText&part=snippet&videoId={video_id}&pageToken={next_page_token}&maxResults=100'
+                    future_to_url[executor.submit(retrieve_comments_page, next_url)] = next_url
+                del future_to_url[future]
+                if len(all_comments) >= 10000:
+                    return all_comments[:10000]
+    return all_comments
 
-        print(f'Author: {formatted_Author}')
-        print(f'Comment: {cleaned_comment}')
-        print(f'Sentiment: {sentiment}')
-        print('-------------------------')
-
-# Main part of the program
-api_key = 'AIzaSyCF4V_xVhqlffr-XxgbuX2ELdo93yZxqtM'
+# Input YouTube video URL
 video_url = input('Input YouTube URL: ')
 video_id = get_video_id(video_url)
 
 if video_id:
-    try:
-        sentiment_counts = {'positive': 0, 'negative': 0, 'neutral': 0}
+    api_key = 'AIzaSyCF4V_xVhqlffr-XxgbuX2ELdo93yZxqtM'
 
-        comments, next_page_token = retrieve_comments(video_id, api_key)
-        print_comments(comments, sentiment_counts)
+    comments = retrieve_comments(video_id, api_key)
 
-        while next_page_token is not None:
-            see_more = input('Type "See More" to load more comments, or press Enter to exit: ')
-            if see_more.lower() == 'see more':
-                more_comments, next_page_token = retrieve_comments(video_id, api_key, next_page_token)
-                print_comments(more_comments, sentiment_counts)
-            else:
-                break
+    if comments:
+        sentiment_counts = analyze_comments_in_batch(comments)
+        
 
-        print(f'Total Positive Comments: {sentiment_counts["positive"]}')
-        print(f'Total Negative Comments: {sentiment_counts["negative"]}')
-        print(f'Total Neutral Comments: {sentiment_counts["neutral"]}')
-
-    except Exception as e:
-        print(f'An error occurred: {e}')
+        # Print the sentiment counts
+        print(f"Total Positive Comments: {sentiment_counts['Positive']}")
+        print(f"Total Negative Comments: {sentiment_counts['Negative']}")
+        print(f"Total Neutral Comments: {sentiment_counts['Neutral']}")
+    else:
+        print("Failed to retrieve comments or no comments found.")
 else:
     print('Video ID not found in the URL.')

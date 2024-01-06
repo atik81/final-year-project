@@ -48,7 +48,7 @@ def analyze_comments(comments):
         sentiment = analyze_sentiment_vader(comment)
         sentiment_counts[sentiment] += 1
     return sentiment_counts
-# Function to analyze sentiment of a comment
+# Function to analyze sentcaiment of a comment
 def analyze_sentiment_vader(comment):
     global positive_count, negative_count, neutral_count
     sentiment = analyzer.polarity_scores(comment)
