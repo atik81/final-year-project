@@ -70,24 +70,37 @@ def retrieve_comments(video_id, api_key):
         if  len(all_comments) >= 10000:
           return all_comments[:10000]
   return all_comments
-def print_comments(comments):
-  global positive_count, negative_count, neutral_count
-  positive_count, negative_count, neutral_count = 0,0,0
+def print_comments_show_graph(comments):
+    global positive_count, negative_count, neutral_count
+    positive_count, negative_count, neutral_count = 0, 0, 0
 
-  for comment in comments :
-    sentiment = analyze_sentiment(comment)
+    for comment in comments:
+        sentiment = analyze_sentiment(comment)
 
-    if sentiment == 'Positive':
-      positive_count +=1
-    elif sentiment =='Negative':
-      negative_count += 1
-    else:
-      neutral_count += 1
+        if sentiment == 'Positive':
+            positive_count += 1
+        elif sentiment == 'Negative':
+            negative_count += 1
+        else:
+            neutral_count += 1
+
+    # Print the final counts
     print(f'Total Positive Comments: {positive_count}')
-    print(f' Total Negative Comments: {negative_count}')
-    print(f' Total Neutral Comments: {neutral_count}')
-    print('----------------------------------------------')
+    print(f'Total Negative Comments: {negative_count}')
+    print(f'Total Neutral Comments: {neutral_count}')
     
+    
+    sentiment = ['Positive', 'Negative', 'Neutral' ]
+    counts = [positive_count,negative_count,neutral_count]
+    total_comments = positive_count + negative_count + neutral_count
+    percentages = [count / total_comments for count in [positive_count, negative_count, neutral_count]]
+
+    
+    plt.bar(sentiment,percentages, color=['green','red','blue'])
+    plt.xlabel('sentiment')
+    plt.ylabel('Percentage  of comments')
+    plt.title('Sentiment analysis of YouTube Comments')
+    plt.show()
 video_url = input('Input Youtube URL: ')
 video_id = get_video_id(video_url)
 api_key = 'AIzaSyCF4V_xVhqlffr-XxgbuX2ELdo93yZxqtM'
@@ -95,7 +108,7 @@ api_key = 'AIzaSyCF4V_xVhqlffr-XxgbuX2ELdo93yZxqtM'
 if video_id: 
   comments = retrieve_comments(video_id,api_key)
   if comments:
-    print_comments(comments)
+    print_comments_show_graph(comments)
   else:
     print('Failed to retrieve or no comments found. ')
 else: 

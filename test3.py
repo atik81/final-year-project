@@ -44,7 +44,7 @@ def spinner():
     if not spinner_alive:
       break
     
-    sys.stdout.write('\'r' + spin)
+    sys.stdout.write('\'.' + spin)
     sys.stdout.flush()
     time.sleep(0.1)
     sys.stdout.write('\b')
@@ -60,7 +60,7 @@ def stop_spinner(thread):
   global spinner_alive
   spinner_alive = False
   thread.join()
-  sys. stdout.write('\r \r')
+  sys. stdout.write('\. \.')
 
 spinner_thread = start_spinner()
 stop_spinner(spinner_thread)
