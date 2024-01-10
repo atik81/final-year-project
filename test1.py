@@ -10,16 +10,11 @@ import numpy as numpy
 from IPython.display import clear_output
 
 
-def overwrite_console(lines_to_overwrite):
-  sys.stdout.write("\033[F" * lines_to_overwrite)
+
 
 analyzer = SentimentIntensityAnalyzer()
 
-def clear_console():
-  if os.name =='nt':
-    _= os.system('cls')
-  else:
-    _= os.system('clear')
+
 def get_video_id(video_url):
       match = re.search(r'v=([A-Za-z0-9_-]+)', video_url)
       return  match.group(1) if match else None
@@ -78,25 +73,20 @@ def retrieve_comments(video_id, api_key):
 def print_comments(comments):
   global positive_count, negative_count, neutral_count
   positive_count, negative_count, neutral_count = 0,0,0
-  lines_printed = 0
-  print('Current Sentiment Counts:')
 
   for comment in comments :
-    overwrite_console(lines_printed)
     sentiment = analyze_sentiment(comment)
 
     if sentiment == 'Positive':
-      positive_count +=10
+      positive_count +=1
     elif sentiment =='Negative':
-      negative_count += 10
+      negative_count += 1
     else:
-      neutral_count += 10
+      neutral_count += 1
     print(f'Total Positive Comments: {positive_count}')
     print(f' Total Negative Comments: {negative_count}')
     print(f' Total Neutral Comments: {neutral_count}')
     print('----------------------------------------------')
-    time.sleep(1)
-    lines_printed = 4
     
 video_url = input('Input Youtube URL: ')
 video_id = get_video_id(video_url)

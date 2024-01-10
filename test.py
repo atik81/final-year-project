@@ -10,16 +10,10 @@ import numpy as numpy
 from IPython.display import clear_output
 
 
-def overwrite_console(lines_to_overwrite):
-  sys.stdout.write("\033[F" * lines_to_overwrite)
 
 analyzer = SentimentIntensityAnalyzer()
 
-def clear_console():
-  if os.name =='nt':
-    _= os.system('cls')
-  else:
-    _= os.system('clear')
+
 def get_video_id(video_url):
       match = re.search(r'v=([A-Za-z0-9_-]+)', video_url)
       return  match.group(1) if match else None
@@ -56,74 +50,55 @@ def retrieve_comments_page(url):
     return comments, data.get('nextPageToken')
   else:
     return [], None
+# ...
 
-def retrieve_comments(video_id, api_key):
-  all_comments = []
-  initial_url = f'https://www.googleapis.com/youtube/v3/commentThreads?key={api_key}&textFormat=plainText&part=snippet&videoId={video_id}&maxResults=100'
+def retrieve_comments(video_id, api_key, page_token=None, max_comments=5000):
+    comments = []
+    while len(comments) < max_comments:
+        video_comments_url = f'https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId={video_id}&key={api_key}&maxResults=100'
+        if page_token:
+            video_comments_url += f'&pageToken={page_token}'
+        response = requests.get(video_comments_url)
+        if response.status_code == 200:
+            data = response.json()
+            comments.extend(data.get('items', []))
+            page_token = data.get('nextPageToken', None)
+            if not page_token:
+                break
+        else:
+            break
 
-  with ThreadPoolExecutor(max_workers=10) as executor:
-    future_to_url ={executor.submit(retrieve_comments_page, initial_url): initial_url}
-    while future_to_url :
-      for future in  as_completed(future_to_url):
-        comments, next_page_token = future.result()
-        all_comments.extend(comments)
-        if next_page_token and len(all_comments) < 10000:
-          next_url = f'https://www.googleapis.com/youtube/v3/commentThreads?key={api_key}&textFormat=plainText&part=snippet&videoId={video_id}&pageToken={next_page_token}&maxResults=100'
+    return comments[:max_comments]
 
-          future_to_url[executor.submit(retrieve_comments_page, next_url)] = next_url
-        del future_to_url[future]
-        if  len(all_comments) >= 10000:
-          return all_comments[:10000]
-  return all_comments
-def print_comments_and_update_chart(comments):
-  global positive_count, negative_count, neutral_count
-  positive_count, negative_count, neutral_count = 0,0,0
-  lines_printed = 0
-  print('Current Sentiment Counts:')
-  
-  plt.ion()
-  fig, ax = plt.subplots()
-  sentiments = ['Positive', 'Negative', 'Neutral']
-  counts = [positive_count,negative_count, neutral_count]
-
-  for comment in comments :
-    overwrite_console(lines_printed)
-    sentiment = analyze_sentiment(comment)
-
-    if sentiment == 'Positive':
-      positive_count +=10
-    elif sentiment =='Negative':
-      negative_count += 10
-    else:
-      neutral_count += 10
-    print(f'Total Positive Comments: {positive_count}')
-    print(f' Total Negative Comments: {negative_count}')
-    print(f' Total Neutral Comments: {neutral_count}')
-    print('----------------------------------------------')
-    time.sleep(1)
-    lines_printed = 4
-    counts = [positive_count,negative_count, neutral_count]
-    ax.clear()
-    ax.bar(sentiment, counts, color=['green','red','blue'])
-    ax.set_title('Sentiment Analysis Counts ')
-    ax.set_ylabel('Counts')
-    ax.set_xlabel('Sentiment')
-    plt.draw()
-    plt.pause(0.1)
-    plt.pause(0.1)
-    
-    clear_output(wait=True)
-plt.ioff
-    
+# ...
 video_url = input('Input Youtube URL: ')
 video_id = get_video_id(video_url)
 api_key = 'AIzaSyCF4V_xVhqlffr-XxgbuX2ELdo93yZxqtM'
 
-if video_id: 
-  comments = retrieve_comments(video_id,api_key)
-  if comments:
-    print_comments_and_update_chart(comments)
-  else:
-    print('Failed to retrieve or no comments found. ')
-else: 
-  print('Video ID not found in the url.')
+if video_id:
+    try:
+        # Retrieve the first batch of comments
+        comments, next_page_token = retrieve_comments(video_id, api_key)
+        positive_count, negative_count, neutral_count = print_comments(comments)
+
+        # Retrieve more comments if they are available
+        while next_page_token is not None:
+            see_more = input('Type "See More" to load more comments, or press Enter to exit: ')
+            if see_more.lower() == 'see more':
+                more_comments, next_page_token = retrieve_comments(video_id, api_key, next_page_token)
+                pos, neg, neu = print_comments(more_comments)
+                positive_count += pos
+                negative_count += neg
+                neutral_count += neu
+            else:
+                break
+
+        # Print totals after processing all comments
+        print(f'Total Positive Comments: {positive_count}')
+        print(f'Total Negative Comments: {negative_count}')
+        print(f'Total Neutral Comments: {neutral_count}')
+
+    except Exception as e:
+        print(f'An error occurred: {e}')
+
+# ...
