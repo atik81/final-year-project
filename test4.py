@@ -80,6 +80,34 @@ def retrieve_comments(video_id, api_key):
         if  len(all_comments) >= 10000:
           return all_comments[:10000]
   return all_comments
+def print_comments(comments):
+    for comment in comments:
+        try:
+            snippet = comment['snippet']['topLevelComment']['snippet']
+            author = snippet['authorDisplayName']
+            text = snippet['textDisplay']
+            cleaned_comment = clean_text(text)
+            sentiment = analyze_sentiment_vader(cleaned_comment)
+            formatted_author = f'{TextStyle.OKYELLOW}{author}{TextStyle.ENDC}'
+
+            print(f'Author: {formatted_author}')
+            print(f'Comment: {cleaned_comment}')
+            print(f'Sentiment: {sentiment}')
+            print('-------------------------')
+
+        except KeyError as e:
+            print(f"Error processing comment: {e}")
+
+def print_all_comments(comments):
+    global positive_count, negative_count, neutral_count
+    for comment in comments:
+        snippet = comment['snippet']['topLevelComment']['snippet']
+        text = snippet['textDisplay']
+        cleaned_comment = clean_text(text)
+        sentiment = analyze_sentiment_vader(cleaned_comment)
+        
+        # Print each comment with its sentiment
+        print(f'Comment: {cleaned_comment}\nSentiment: {sentiment}\n-------------------------')
 def analyze_sentiment_vader_all(comment):
     global positive_count, negative_count, neutral_count
     sentiment = analyzer.polarity_scores(comment)
@@ -109,28 +137,7 @@ def analyze_sentiment_vader(comment):
 
         return f'{TextStyle.OKBLUE}Neutral{TextStyle.ENDC}'
     
-def print_comments_with_sentiment(comments):
-    analyzer = SentimentIntensityAnalyzer()
 
-    for comment in comments:
-        try:
-            # Ensure that `comment` is a dictionary before accessing it
-            if isinstance(comment, dict):
-                snippet = comment.get('snippet', {}).get('topLevelComment', {}).get('snippet', {})
-                author = snippet.get('authorDisplayName', 'Unknown Author')
-                text = snippet.get('textDisplay', '')
-                cleaned_comment = clean_text(text)
-                sentiment = analyze_sentiment_vader(cleaned_comment)
-                formatted_author = f'{TextStyle.OKYELLOW}{author}{TextStyle.ENDC}'
-
-                print(f'Author: {formatted_author}')
-                print(f'Comment: {cleaned_comment}')
-                print(f'Sentiment: {sentiment}')
-                print('-------------------------')
-            else:
-                print(f"Expected a dictionary but got: {type(comment)}")
-        except Exception as e:
-            print(f"An error occurred while printing comment: {e}")
 def print_all_comments(comments):
     for comment in comments:
         snippet = comment['snippet']['topLevelComment']['snippet']
@@ -182,9 +189,7 @@ if video_id:
         # Retrieve video comments
         video_comments_url = f'https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId={video_id}&key={api_key}'
         video_comments_response = requests.get(video_comments_url)
-        print(f"Total comments retrieved: {len(video_comments_url)}")
 
-        print_comments_with_sentiment(video_comments_url)
 
         if video_comments_response.status_code == 200:
 
