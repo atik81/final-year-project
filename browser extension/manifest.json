@@ -3,7 +3,8 @@
     "name": "Youtube Comment Analyzer",
     "version": "1.0",
     "permissions": [
-        "activeTab"
+        "activeTab",
+        "storage"
     ],
     "host_permissions": [
         "*://*.youtube.com/*"
@@ -28,5 +29,4 @@
         "matches": ["*://www.youtube.com/watch*"],
         "js": ["content.js"]
     }]
-
 }
