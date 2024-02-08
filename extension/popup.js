@@ -12,7 +12,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const requestUrl = `http://127.0.0.1:5000/analyze_comments?url=${encodeURIComponent(currentTabUrl)}&apiKey=${encodeURIComponent(apiKey)}`;
 
             fetch(requestUrl)
-                .then(response => response.json())
+                .then(response => {
+                    console.log(response)
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+
+                    }
+                    return response.json();
+
+                })
                 .then(data => {
                     if (data.results) {
                         outputElement.textContent = 'Analysis Results:\n' + JSON.stringify(data.results, null, 2);
@@ -21,13 +29,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching analysis:', error);
-                    outputElement.textContent = 'Error fetching analysis: ' + error;
+                    console.error('Error fetching analysis:', error, requestUrl);
+                    outputElement.textContent = 'Error fetching analysis: ' + error.message;
                 })
-                .finally(() => {
-                    summarizeButton.disabled = false;
-                    summarizeButton.textContent = 'Summarize Video';
-                });
+
+            .finally(() => {
+                summarizeButton.disabled = false;
+                summarizeButton.textContent = 'Summarize Video';
+            });
         });
     });
 });
