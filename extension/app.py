@@ -7,6 +7,8 @@ import requests
 import re
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import matplotlib.pyplot as plt
+from urllib.parse import urlparse, parse_qs
+
 
 
 app = Flask(__name__)
@@ -42,7 +44,11 @@ def fetch_comments(video_id, api_key):
     
     return comments
       
-
+def extract_video_id(url):
+    parsed_url = urlparse(url)
+    query_string = parse_qs(parsed_url.query)
+    video_id = query_string.get("v", [None])[0]
+    return video_id
 # Function to analyze sentiment of comments
 def analyze_sentiment_vadar(comments):
     sentiment_counts = {'positive': 0, 'negative': 0, 'neutral': 0}
@@ -71,18 +77,47 @@ def analyze_comments_api():
     if not api_key:
         return {"error": "API key is required."}, 400
 
-    video_id = None
-    try:
-        video_id = url.split('=')[1]
-    except IndexError:
+    video_id = extract_video_id(url)
+    if not video_id:
         return {"error": "Invalid URL provided."}, 400
 
+    youtube = build('youtube', 'v3', developerKey=api_key)
+    # fetch comments
     comments = fetch_comments(video_id, api_key)
     if not comments:
         return {"error": "Could not fetch comments or no comments found."}, 500
-
+    
+    # fetch video details 
+    video_response = youtube.videos().list(
+        part="snippet,statistics",
+        id=video_id
+    ).execute()
+    if not video_response["items"]:
+        return {"error": "Could not fetch video details."},500
+    video_details = video_response["items"][0]
+    video_title = video_details["snippet"]["title"]
+    like_count = video_details["statistics"].get("likeCount",0)
+    comment_count = video_details['statistics'].get("commentCount",0)
+    # fetch channel details 
+    channel_id = video_details["snippet"]["channelId"]
+    channel_response = youtube.channels().list(
+        part="snippet,statistics",
+        id=channel_id
+    ).execute()
+    if not channel_response['items']:
+        return{"error", "Could not fetch channel details."},500
+    channel_details= channel_response["items"][0]
+    subscriber_count = channel_details["statistics"].get('subscriberCount',0)
+    
     sentiment_results = analyze_sentiment_vadar(comments)
-    return {"results": sentiment_results}, 200
+    results ={
+        "videoTitle": video_title,
+        "likeCount": like_count,
+        "commentCount": comment_count,
+        "subscriberCount": subscriber_count,
+        "sentimentResults": sentiment_results
+    }
+    return {"results": results}, 200
 
 
 if __name__ == '__main__':

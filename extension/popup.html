@@ -15,10 +15,20 @@
         <div id="form">
             <p>Click the button to summarize the active YouTube video.</p>
             <button id="summarizeButton">Summarize Video</button>
-        </div>
-        <div id="summaryResult">
-            <h2>Summary</h2>
             <p id="summaryText">Your summary will appear here.</p>
+
+        </div>
+        <div id="Result" style="display:none;">
+            <h2>Summary</h2>
+            <p><b>Video Title:</b> <span id="videoTitle"></span></p>
+            <p><b>Like Count:</b> <span id="likeCount"></span></p>
+            <p><b>Comment Count:</b> <span id="commentCount"></span></p>
+            <p><b>Subsciber Count:</b> <span id="subscriberCount"></span></p>
+
+            <div id="sentimentResults"></div>
+
+
+
         </div>
     </div>
     <script src="popup.js"></script>
