@@ -1,19 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>Youtube Comment Analyzer</title>
-    <link rel="stylesheet" type="text/css" href="popup.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Analyzer</title>
+    <link rel="stylesheet" href="popup.css">
 </head>
 
 <body>
-    <div>
-        <input type="text" id="videoUrlInput" placeholder="Enter youtube URL">
-        <button id="submitButton">Analyze Comments</button>
+    <div class="container">
+        <h1>YouTube Video Analyzer </h1>
+        <div id="form">
+            <p>Click the button to analyze the active YouTube video.</p>
+            <button id="analyzeButton">Analyze Video</button>
+            <p id="analyzeText">Your Analyze will appear here.</p>
+
+        </div>
+        <div id="Result" style="display:none;">
+            <h2>Analyze</h2>
+            <p><b>Video Title:</b> <span id="videoTitle"></span></p>
+            <p><b>Like Count:</b> <span id="likeCount"></span></p>
+            <p><b>Comment Count:</b> <span id="commentCount"></span></p>
+            <p><b>Subsciber Count:</b> <span id="subscriberCount"></span></p>
+
+            <div id="sentimentResults">
+                <p><b>Sentiment Analyze: </b></p>
+                <p id="positiveSentiment"><b> Positive :</b>[Positive Count]</p>
+                <p id="neutralSentiment"><b> Neutral :</b>[Neutral Count]</p>
+                <p id="negativeSentiment"><b> Negative :</b>[Negative Count]</p>
+
+
+            </div>
+
+
+
+        </div>
     </div>
-    <div id="chartContainer"></div>
     <script src="popup.js"></script>
-    <script src="analyzeSentiment.js"></script>
 </body>
 
 </html>

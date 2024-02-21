@@ -2,13 +2,32 @@ body {
     font-family: Arial, sans-serif;
     margin: 20px;
     padding: 20px;
-    background-color: #ad5757;
+    background-color: #f1ebeb;
 }
 
 #results {
     margin-top: 20px;
     padding: 20px;
-    background-color: white;
+    background-color: rgb(12, 183, 230);
     border-radius: 8px;
-    box-shadow: 0 0 10px rgba(red, green, blue, alpha);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    /* This will create a semi-transparent black shadow */
+}
+
+#sentimentAnalysisContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#sentimentAnalysisText {
+    /* Additional styles if needed */
+    width: 50%;
+    /* Adjust width as necessary */
+}
+
+#sentimentAnalysisDonutChart {
+    /* Additional styles if needed */
+    width: 50%;
+    /* Adjust width as necessary */
 }

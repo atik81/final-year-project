@@ -1,82 +1,87 @@
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById("submitButton").addEventListener("click", AnalyzeCommentsHandler);
-});
+    const analyzeButton = document.getElementById('analyzeButton');
 
-// Function to retrieve comments from YouTube API
-async function retrieveComments(videoId, apiKey) {
-    const url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=${apiKey}&textFormat=plainText&maxResults=100`;
-
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(`YouTube API error: ${data.error.message}`);
-        }
-
-        return data.items.map(item => item.snippet.topLevelComment.snippet.textDisplay);
-    } catch (error) {
-        console.error('Error retrieving comments:', error);
-        throw error; // Rethrow the error to be caught by the calling function
-    }
-}
-
-// Handler function for when the Analyze Comments button is clicked
-async function AnalyzeCommentsHandler() {
-    const videoUrl = document.getElementById("videoUrlInput").value;
-    const videoId = getVideoId(videoUrl);
-
-    if (videoId) {
-        try {
-            // Retrieve the API key
-            const apiKey = await getApiKey();
-
-            // Retrieve comments with the API key
-            const comments = await retrieveComments(videoId, apiKey);
-            if (comments && comments.length > 0) {
-                const sentimentCounts = { positive: 0, negative: 0, neutral: 0 };
-                for (const comment of comments) {
-                    const sentiment = await AnalyzeSentiment(comment); // Assume this function is implemented elsewhere
-                    sentimentCounts[sentiment]++;
-                }
-                updateChart(sentimentCounts); // Assume this function is implemented elsewhere
-            } else {
-                console.error("Failed to retrieve or no comments found.");
+    analyzeButton.addEventListener('click', function() {
+        analyzeButton.disabled = true;
+        analyzeButton.textContent = "Analyzing..."
+        chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+            const currentTabUrl = tabs[0].url;
+            if (!currentTabUrl.includes('youtube.com/watch')) {
+                outputElement.textContent = 'This tool is for YouTube videos only.';
+                analyzeButton.disabled = false;
+                analyzeButton.textContent = 'Analyze Video';
+                return; // Legal use of return within a function
             }
-        } catch (error) {
-            console.error("An error occurred:", error);
-        }
-    } else {
-        console.error("Video ID not found in the URL");
-    }
-}
 
-// Function to extract the video ID from the YouTube URL
-function getVideoId(url) {
-    const urlObj = new URL(url);
-    return urlObj.searchParams.get('v');
-}
+            const apiKey = 'AIzaSyCF4V_xVhqlffr-XxgbuX2ELdo93yZxqtM';
+            const requestUrl = `http://127.0.0.1:5000/analyze_comments?url=${encodeURIComponent(currentTabUrl)}&apiKey=${encodeURIComponent(apiKey)}`;
 
-// Function to retrieve the API key securely
-async function getApiKey() {
-    return new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage({ action: "getApiKey" }, function(response) {
-            if (response && response.apiKey) {
-                resolve(response.apiKey);
-            } else {
-                reject("API Key not found.");
-            }
+            fetch(requestUrl)
+                .then(response => {
+                    console.log(response)
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+
+                    }
+                    return response.json();
+
+                })
+                .then(data => {
+                    if (data.results) {
+                        displayResults(data.results); // Correct way to display results
+                    } else {
+                        document.getElementById('analyzeText').textContent = 'Error: ' + data.error;
+                    }
+                })
+
+
+            .catch(error => {
+                console.error('Error fetching analysis:', error);
+                document.getElementById('analyzeText').textContent = 'Error fetching analysis: ' + error.message;
+            })
+
+            .finally(() => {
+                analyzeButton.disabled = false;
+                analyzeButton.textContent = 'analyze Video';
+            });
         });
     });
-}
+});
 
-// Placeholder functions that need to be implemented or integrated
-async function AnalyzeSentiment(comment) {
-    // Function should be defined in analyzeSentiment.js
-    throw new Error('AnalyzeSentiment function is not implemented.');
-}
+function displayResults(results, outputElement) {
+    document.getElementById('Result').style.display = 'block';
+    document.getElementById('videoTitle').textContent = results.videoTitle || 'Not available';
+    document.getElementById('likeCount').textContent =
+        Number(results.likeCount).toLocaleString() || 'Not available';
 
-function updateChart(sentimentCounts) {
-    // Function should update the chart in the popup based on sentiment analysis
-    console.log("Update your chart here", sentimentCounts);
+    document.getElementById('commentCount').textContent =
+        Number(results.commentCount).toLocaleString() || 'Not available';
+    document.getElementById('subscriberCount').textContent =
+        Number(results.subscriberCount).toLocaleString() || 'Not available';
+
+    if (!results) {
+        outputElement.textContent = "No results found. Please ensure the video URL is correct and try again.";
+        return;
+    }
+
+    let analyzeText = `Video Title: ${results.videoTitle}\n` +
+        `Like Count: ${results.likeCount}\n` +
+        `Comment Count: ${results.commentCount}\n` +
+        `Subscriber Count: ${results.subscriberCount}\n` +
+        `Sentiment Analysis:\n` +
+        `Positive: ${results.sentimentResults.positive}\n` +
+        `Neutral: ${results.sentimentResults.neutral}\n` +
+        `Negative: ${results.sentimentResults.negative}`;
+    document.getElementById('positiveSentiment').textContent = `Positive: ${
+            Number(results.sentimentResults.positive).toLocaleString() || 'Not available'
+        }`;
+    document.getElementById('neutralSentiment').textContent = `Neutral: ${
+            Number(results.sentimentResults.neutral).toLocaleString() || 'Not available'
+        }`;
+    document.getElementById('negativeSentiment').textContent = `Negative: ${
+            Number(results.sentimentResults.negative).toLocaleString() || 'Not available'
+        }`;
+
+
+
 }

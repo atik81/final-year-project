@@ -4,35 +4,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Summariser</title>
+    <title>YouTube Analyzer</title>
     <link rel="stylesheet" href="popup.css">
-    <!-- Link to your CSS file for styling -->
 </head>
 
 <body>
     <div class="container">
-        <h1>YouTube Video Summariser</h1>
+        <h1>YouTube Video Analyzer </h1>
         <div id="form">
-            <p>Click the button to summarize the active YouTube video.</p>
-            <button id="summarizeButton">Summarize Video</button>
-            <p id="summaryText">Your summary will appear here.</p>
+            <p>Click the button to analyze the active YouTube video.</p>
+            <button id="analyzeButton">Analyze Video</button>
+            <p id="analyzeText">Your Analyze will appear here.</p>
 
         </div>
         <div id="Result" style="display:none;">
-            <h2>Summary</h2>
+            <h2>Analyze</h2>
             <p><b>Video Title:</b> <span id="videoTitle"></span></p>
             <p><b>Like Count:</b> <span id="likeCount"></span></p>
             <p><b>Comment Count:</b> <span id="commentCount"></span></p>
             <p><b>Subsciber Count:</b> <span id="subscriberCount"></span></p>
+            <div id="sentimentAnalysisContainer">
+                <div id="sentimentResults">
+                    <p><b>Sentiment Analyze: </b></p>
+                    <p id="positiveSentiment"><b> Positive :</b>[Positive Count]</p>
+                    <p id="neutralSentiment"><b> Neutral :</b>[Neutral Count]</p>
+                    <p id="negativeSentiment"><b> Negative :</b>[Negative Count]</p>
 
-            <div id="sentimentResults"></div>
+
+                </div>
+
+                <div id="sentimentAnalysisDonutChart"></div>
+
+            </div>
+
 
 
 
         </div>
     </div>
+    <script src="d3.v6.min.js"></script>
+
     <script src="popup.js"></script>
-    <!-- Link to your JavaScript file -->
 </body>
 
 </html>
