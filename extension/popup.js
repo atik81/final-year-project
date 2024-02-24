@@ -66,6 +66,12 @@ function displayResults(results, outputElement) {
         return;
     }
 
+    function applyTextStyles(element, color) {
+        element.style.color = color;
+        element.style.fontSize = '15px'; // Set font size to be larger
+        element.style.fontWeight = 'bold'; // Make the font weight bold
+    }
+
     let analyzeText = `Video Title: ${results.videoTitle}\n` +
         `Like Count: ${results.likeCount}\n` +
         `Comment Count: ${results.commentCount}\n` +
@@ -77,16 +83,35 @@ function displayResults(results, outputElement) {
     document.getElementById('positiveSentiment').textContent = `Positive: ${
         Number(results.sentimentResults.positive).toLocaleString() || 'Not available'
     }`;
+    applyTextStyles(positiveSentiment, 'green');
+
     document.getElementById('neutralSentiment').textContent = `Neutral: ${
         Number(results.sentimentResults.neutral).toLocaleString() || 'Not available'
     }`;
+    applyTextStyles(neutralSentiment, 'blue');
+
     document.getElementById('negativeSentiment').textContent = `Negative: ${
         Number(results.sentimentResults.negative).toLocaleString() || 'Not available'
     }`;
+    applyTextStyles(negativeSentiment, 'red');
+
 
 }
+const legendRectSize = 18; // defines the size of the legend color box
+const legendSpacing = 4;
 
 function drawSentimentAnalysisDonutChart(sentimentResults) {
+
+    function getLabelText(d) {
+        const percentage = (100 * d.value / total).toFixed(1);
+        return `${d.data.label}: ${percentage}%`; // Return label with percentage
+    }
+    const colors = {
+        positive: '#008000', // Correct hex code for green
+        neutral: '#0000FF', // Correct hex code for grey
+        negative: '#FF0000' // Correct hex code for red
+    };
+
     if (!sentimentResults || !sentimentResults.positive || !sentimentResults.neutral || !sentimentResults.negative) {
         console.error("Sentiment results are not properly formatted", sentimentResults);
         return; // Exit the function if data is not valid
@@ -95,34 +120,30 @@ function drawSentimentAnalysisDonutChart(sentimentResults) {
 
 
     const data = [
-        { label: "Positive", value: sentimentResults.positive, color: "#008000" },
-        { label: "Neutral", value: sentimentResults.neutral, color: "#808080" },
-        { label: "Negative", value: sentimentResults.negative, color: "#FF0000" },
+        { label: "Positive", value: sentimentResults.positive, color: colors.positive },
+        { label: "Neutral", value: sentimentResults.neutral, color: colors.neutral },
+        { label: "Negative", value: sentimentResults.negative, color: colors.negative },
     ];
     console.log('Chart Data:', data);
 
 
-    const width = 180,
-        height = 90,
+    const width = 120,
+        height = 70,
         radius = Math.min(width, height * 2) / 2,
-        donutWidth = 50;
+        donutWidth = 30;
 
     const svgContainer = d3.select("#sentimentAnalysisDonutChart");
-    if (!svgContainer.node()) {
-        console.error("The element #sentimentAnalysisDonutChart does not exist in the DOM.");
-        return; // Exit the function because the element is not present
-    }
+    svgContainer.selectAll("svg").remove();
+
     const svg = svgContainer.append("svg")
         .attr("width", width)
         .attr("height", height)
         .append('g')
-        .attr('transform', `translate(${width / 2}, ${height})`);
+        .attr('transform', `translate(${width / 2}, ${radius + 10})`); // Adjusted for proper centering
 
     const arc = d3.arc()
         .innerRadius(radius - donutWidth)
-        .outerRadius(radius)
-        .startAngle(-Math.PI / 2)
-        .endAngle(Math.PI / 2);
+        .outerRadius(radius);
     const labelArc = d3.arc()
         .outerRadius(radius - donutWidth / 2)
         .innerRadius(radius - donutWidth / 2);
@@ -130,14 +151,15 @@ function drawSentimentAnalysisDonutChart(sentimentResults) {
     const pie = d3.pie()
         .value(d => d.value)
         .sort(null)
-        .startAngle(-Math.PI / 2)
-        .endAngle(Math.PI / 2);
+
     const path = svg.selectAll('path')
         .data(pie(data))
         .enter()
         .append('path')
         .attr('d', arc)
         .attr('fill', d => d.data.color);
+
+
     svg.selectAll('path')
         .data(pie(data))
         .enter()
@@ -150,38 +172,76 @@ function drawSentimentAnalysisDonutChart(sentimentResults) {
     });
 
     // mouseover event
-    path.on('mouseover', function(event, d) {
-        d3.select(this)
-            .transition()
-            .duration(300)
-            .attr('fill', d3.rgb(d.data.color).brighter(0.9));
-    })
 
-
-    .on('mouseout', function(event, d) {
-        d3.select(this)
-            .transition()
-            .duration(300)
-            .attr('fill', d.data.color);
-    });
     const total = d3.sum(data.map(d => d.value)); // Calculate the total sum of the data values
+    const legendStartingPoint = width / 2 - (data.length * (legendRectSize + legendSpacing + 100)) / 2;
+
+
+    const legend = svg.selectAll('.legend')
+        .data(data)
+        .enter()
+        .append('g')
+        .attr('class', 'legend')
+        .attr('transform', function(d, i) {
+            const horz = i * (legendRectSize + legendSpacing + 100) + legendStartingPoint; // 100 is additional spacing between items
+            const vert = radius + donutWidth / 2 + 40; // 40 is the space below the donut chart
+            return `translate(${horz}, ${vert})`;
+        });
+
+    // Append a rectangle to each legend item
+    legend.append('rect')
+        .attr('width', legendRectSize)
+        .attr('height', legendRectSize)
+        .style('fill', d => d.color)
+        .style('stroke', d => d.color);
+
+    // Append the text to each legend item
+    legend.append('text')
+        .attr('x', legendRectSize + legendSpacing)
+        .attr('y', legendRectSize - legendSpacing + 5) // Center the text vertically
+        .text(d => `${d.label}: ${(100 * d.value / total).toFixed(1)}%`)
+        .style('fill', '#444') // Font color
+        .style('font-size', '14px') // Font size
+        .style('font-family', 'Arial, sans-serif');
 
     svg.selectAll('.label')
         .data(pie(data))
         .enter()
         .append('text')
-        .attr('class', 'label') // Add class for CSS if needed
-        .attr('transform', d => {
-            const [x, y] = labelArc.centroid(d);
-            return `translate(${x}, ${y})`;
-        })
+        .attr('class', 'label')
+        .attr('transform', d => `translate(${labelArc.centroid(d)})`)
+        .text(getLabelText)
         .attr('text-anchor', 'middle')
-        .text(d => `${d.data.label}: ${(100 * d.data.value / total).toFixed(1)}%`)
-        .style('fill', 'black') // Change color as needed
-        .style('font-size', '10px');
 
+    .style('fill', 'black') // Make sure this color stands out against the segment colors
 
+    .style('font-size', '12px') // Larger font size for readability
+        .style('font-family', 'Arial, sans-serif');
 
+    const tooltip = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("position", "absolute")
+        .style("visibility", "hidden")
+        .style("background", "white")
+        .style("border", "1px solid #ddd")
+        .style("border-radius", "5px")
+        .style("padding", "5px")
+        .style("box-shadow", "2px 2px 10px rgba(0,0,0,0.5)")
+        .style("text-align", "center");
+
+    path.on('mouseover', function(event, d) {
+            tooltip.html(getLabelText(d)) // Tooltip will now show label and percentage
+                .style("visibility", "visible")
+                .style("left", (event.pageX) + "px")
+                .style("top", (event.pageY - 28) + "px");
+        })
+        .on('mousemove', function(event) {
+            tooltip.style("left", (event.pageX) + "px")
+                .style("top", (event.pageY - 28) + "px");
+        })
+        .on('mouseout', function() {
+            tooltip.style("visibility", "hidden");
+        });
 
 
 }

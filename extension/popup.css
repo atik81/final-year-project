@@ -31,3 +31,32 @@ body {
     width: 50%;
     /* Adjust width as necessary */
 }
+
+.tooltip {
+    position: absolute;
+    max-width: 200px;
+    word-wrap: break-word;
+    background-color: #fff;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    pointer-events: none;
+    opacity: 0.9;
+    font-size: 12px;
+    z-index: 1000;
+}
+
+.label {
+    font-size: 14px;
+}
+
+.legend text {
+    font-size: 14px;
+    font-weight: 400;
+    /* Adjust the weight as needed */
+}
+
+.legend rect {
+    stroke-width: 2;
+    /* Adjust the stroke width as needed */
+}
