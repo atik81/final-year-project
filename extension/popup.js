@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     const analyzeButton = document.getElementById('analyzeButton');
-
+    if (commentsContainer) {
+        commentsContainer.innerHTML = ''
+    }
     analyzeButton.addEventListener('click', function() {
         analyzeButton.disabled = true;
         analyzeButton.textContent = "Analyzing..."
@@ -27,10 +29,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 })
                 .then(data => {
+                    console.log(data); // This will show you the entire response object
                     if (data.results) {
                         displayResults(data.results);
                         drawSentimentAnalysisDonutChart(data.results.sentimentResults);
-                        // Correct way to display results
+                        displayComments(data.results.comments)
                     } else {
                         document.getElementById('analyzeText').textContent = 'Error: ' + data.error;
                     }
@@ -97,6 +100,42 @@ function displayResults(results, outputElement) {
 
 
 }
+
+function displayComments(comments) {
+    const commentsContainer = document.getElementById('commentsContainer');
+    commentsContainer.innerHTML = ''; // Clear the container before adding new comments
+
+    console.log('Received comments:', comments); // Log the comments array for debugging
+
+    if (!comments || comments.length === 0) {
+        console.log('No comments or empty comments array detected.');
+        commentsContainer.textContent = 'No Comments found.';
+        return;
+    }
+
+    comments.forEach(comment => {
+        console.log('Processing comment:', comment);
+        const commentElement = document.createElement('div');
+        commentElement.classList.add('comment');
+
+        const authorElement = document.createElement('p');
+        authorElement.textContent = `Author: ${comment.author}`; // Use backticks for template literals
+        commentElement.appendChild(authorElement);
+
+        const textElement = document.createElement('p');
+        textElement.textContent = `Comment: ${comment.text}`; // Use backticks for template literals
+        commentElement.appendChild(textElement);
+
+        const sentimentElement = document.createElement('p');
+        sentimentElement.textContent = `Sentiment: ${comment.sentiment}`; // Use backticks for template literals
+        commentElement.appendChild(sentimentElement);
+
+        commentsContainer.appendChild(commentElement);
+    });
+}
+
+
+
 const legendRectSize = 18; // defines the size of the legend color box
 const legendSpacing = 4;
 
@@ -196,13 +235,7 @@ function drawSentimentAnalysisDonutChart(sentimentResults) {
         .style('stroke', d => d.color);
 
     // Append the text to each legend item
-    legend.append('text')
-        .attr('x', legendRectSize + legendSpacing)
-        .attr('y', legendRectSize - legendSpacing + 5) // Center the text vertically
-        .text(d => `${d.label}: ${(100 * d.value / total).toFixed(1)}%`)
-        .style('fill', '#444') // Font color
-        .style('font-size', '14px') // Font size
-        .style('font-family', 'Arial, sans-serif');
+
 
     svg.selectAll('.label')
         .data(pie(data))
@@ -210,7 +243,6 @@ function drawSentimentAnalysisDonutChart(sentimentResults) {
         .append('text')
         .attr('class', 'label')
         .attr('transform', d => `translate(${labelArc.centroid(d)})`)
-        .text(getLabelText)
         .attr('text-anchor', 'middle')
 
     .style('fill', 'black') // Make sure this color stands out against the segment colors
