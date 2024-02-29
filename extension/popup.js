@@ -191,12 +191,41 @@ function drawSentimentAnalysisDonutChart(sentimentResults) {
         .value(d => d.value)
         .sort(null)
 
+
+
     const path = svg.selectAll('path')
         .data(pie(data))
         .enter()
         .append('path')
         .attr('d', arc)
-        .attr('fill', d => d.data.color);
+        .attr('fill', d => d.data.color)
+        .attr('stroke', '#fff')
+        .attr('stroke-width', '2px') // Width of the stroke for separation effect
+        .style('filter', 'url(#drop-shadow)')
+        .each(function(d) { this._current = d; })
+        .on('mouseover', function(event, d) {
+            // Scale up the segment on hover
+            d3.select(this).transition()
+                .duration(200)
+                .attr('transform', function(d) {
+                    const centroid = arc.centroid(d);
+                    return `translate(${centroid[0] * 0.1}, ${centroid[1] * 0.1})`;
+                });
+        })
+        .on('mouseout', function(event, d) {
+            // Scale down the segment on mouse out
+            d3.select(this).transition()
+                .duration(200)
+                .attr('transform', 'translate(0,0)');
+        });
+    path.transition()
+        .duration(750)
+        .attrTween('d', function(d) {
+            const interpolate = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
+            return function(t) {
+                return arc(interpolate(t));
+            };
+        });
 
 
     svg.selectAll('path')
@@ -235,6 +264,7 @@ function drawSentimentAnalysisDonutChart(sentimentResults) {
         .style('stroke', d => d.color);
 
     // Append the text to each legend item
+
 
 
     svg.selectAll('.label')
