@@ -146,9 +146,9 @@ function drawSentimentAnalysisDonutChart(sentimentResults) {
         return `${d.data.label}: ${percentage}%`; // Return label with percentage
     }
     const colors = {
-        positive: '#008000', // Correct hex code for green
+        positive: '#2ca02c', // Correct hex code for green
         neutral: '#0000FF', // Correct hex code for grey
-        negative: '#FF0000' // Correct hex code for red
+        negative: '#d62728' // Correct hex code for red
     };
 
     if (!sentimentResults || !sentimentResults.positive || !sentimentResults.neutral || !sentimentResults.negative) {
@@ -267,18 +267,7 @@ function drawSentimentAnalysisDonutChart(sentimentResults) {
 
 
 
-    svg.selectAll('.label')
-        .data(pie(data))
-        .enter()
-        .append('text')
-        .attr('class', 'label')
-        .attr('transform', d => `translate(${labelArc.centroid(d)})`)
-        .attr('text-anchor', 'middle')
 
-    .style('fill', 'black') // Make sure this color stands out against the segment colors
-
-    .style('font-size', '12px') // Larger font size for readability
-        .style('font-family', 'Arial, sans-serif');
 
     const tooltip = d3.select("body").append("div")
         .attr("class", "tooltip")
