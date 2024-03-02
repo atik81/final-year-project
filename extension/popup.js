@@ -100,6 +100,8 @@ function displayResults(results, outputElement) {
 
 
 }
+const commentsContainer = document.getElementById('commentsContainer');
+
 
 function displayComments(comments) {
     const commentsContainer = document.getElementById('commentsContainer');
@@ -113,27 +115,29 @@ function displayComments(comments) {
         return;
     }
 
-    comments.forEach(comment => {
-        console.log('Processing comment:', comment);
+    comments.forEach(commentText => {
+        console.log('Processing comments:', commentText);
         const commentElement = document.createElement('div');
-        commentElement.classList.add('comment');
+        commentElement.classList.add('comments');
 
         const authorElement = document.createElement('p');
-        authorElement.textContent = `Author: ${comment.author}`; // Use backticks for template literals
+        authorElement.textContent = `Author: ${commentText.author}`; // Use backticks for template literals
         commentElement.appendChild(authorElement);
 
         const textElement = document.createElement('p');
-        textElement.textContent = `Comment: ${comment.text}`; // Use backticks for template literals
+        textElement.textContent = `Comment: ${commentText}`; // Use backticks for template literals
         commentElement.appendChild(textElement);
 
         const sentimentElement = document.createElement('p');
-        sentimentElement.textContent = `Sentiment: ${comment.sentiment}`; // Use backticks for template literals
+        sentimentElement.textContent = `Sentiment: ${commentText.sentiment}`; // Use backticks for template literals
         commentElement.appendChild(sentimentElement);
 
         commentsContainer.appendChild(commentElement);
     });
 }
 
+// Directly after defining commentsContainer
+commentsContainer.innerHTML = '<p>Test Comment</p>';
 
 
 const legendRectSize = 18; // defines the size of the legend color box

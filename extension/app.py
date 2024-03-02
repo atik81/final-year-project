@@ -116,6 +116,8 @@ def analyze_comments_api():
         "commentCount": comment_count,
         "subscriberCount": subscriber_count,
         "sentimentResults": sentiment_results
+
+        
     }
     return {"results": results}, 200
 
