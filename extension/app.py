@@ -1,4 +1,5 @@
 from flask import Flask, request
+from app import app
 from googleapiclient.discovery import build
 from transformers import pipeline
 from flask_cors import CORS
@@ -6,9 +7,15 @@ import os
 import requests
 import re
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-import matplotlib.pyplot as plt
 from urllib.parse import urlparse, parse_qs
+from dotenv import load_dotenv
+from waitress import serve
 
+load_dotenv()
+#environment variable 
+serve(app, host='0.0.0.0', port=8000)
+
+API_key=os.getenv("API_key")
 
 
 app = Flask(__name__)
@@ -72,7 +79,7 @@ def analyze_comments_api():
     url = request.args.get('url', '')
     
 
-    api_key = request.args.get('apiKey', os.environ.get('AIzaSyCF4V_xVhqlffr-XxgbuX2ELdo93yZxqtM'))  # Ensure you securely manage your API key
+    api_key = request.args.get('apiKey', os.environ.get(API_key))  # Ensure you securely manage your API key
 
     if not api_key:
         return {"error": "API key is required."}, 400

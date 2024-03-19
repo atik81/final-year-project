@@ -2,7 +2,6 @@ import requests
 import re
 from concurrent.futures import ThreadPoolExecutor
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-import emoji
 
 api_key = 'AIzaSyCF4V_xVhqlffr-XxgbuX2ELdo93yZxqtM'
 analyzer = SentimentIntensityAnalyzer()
