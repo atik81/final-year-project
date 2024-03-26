@@ -107,33 +107,34 @@ function displayComments(comments) {
     const commentsContainer = document.getElementById('commentsContainer');
     commentsContainer.innerHTML = ''; // Clear the container before adding new comments
 
-    console.log('Received comments:', comments); // Log the comments array for debugging
-
     if (!comments || comments.length === 0) {
-        console.log('No comments or empty comments array detected.');
-        commentsContainer.textContent = 'No Comments found.';
-        return;
+        // No comments found, display the message
+        const noCommentsMessage = document.createElement('p');
+        noCommentsMessage.textContent = 'No Comments found.';
+        noCommentsMessage.style.textAlign = 'center';
+        commentsContainer.appendChild(noCommentsMessage);
+    } else {
+        // Comments exist, display them
+        comments.forEach(comment => {
+            const commentElement = document.createElement('div');
+            commentElement.classList.add('comment');
+
+            // Assuming commentText is an object with author, text, and sentiment properties
+            const authorElement = document.createElement('p');
+            authorElement.textContent = `Author: ${comment.author}`;
+            commentElement.appendChild(authorElement);
+
+            const textElement = document.createElement('p');
+            textElement.textContent = `Comment: ${comment.text}`;
+            commentElement.appendChild(textElement);
+
+            const sentimentElement = document.createElement('p');
+            sentimentElement.textContent = `Sentiment: ${comment.sentiment}`;
+            commentElement.appendChild(sentimentElement);
+
+            commentsContainer.appendChild(commentElement);
+        });
     }
-
-    comments.forEach(commentText => {
-        console.log('Processing comments:', commentText);
-        const commentElement = document.createElement('div');
-        commentElement.classList.add('comments');
-
-        const authorElement = document.createElement('p');
-        authorElement.textContent = `Author: ${commentText.author}`; // Use backticks for template literals
-        commentElement.appendChild(authorElement);
-
-        const textElement = document.createElement('p');
-        textElement.textContent = `Comment: ${commentText}`; // Use backticks for template literals
-        commentElement.appendChild(textElement);
-
-        const sentimentElement = document.createElement('p');
-        sentimentElement.textContent = `Sentiment: ${commentText.sentiment}`; // Use backticks for template literals
-        commentElement.appendChild(sentimentElement);
-
-        commentsContainer.appendChild(commentElement);
-    });
 }
 
 // Directly after defining commentsContainer

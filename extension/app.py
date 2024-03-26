@@ -1,5 +1,4 @@
 from flask import Flask, request
-from app import app
 from googleapiclient.discovery import build
 from transformers import pipeline
 from flask_cors import CORS
@@ -13,7 +12,6 @@ from waitress import serve
 
 load_dotenv()
 #environment variable 
-serve(app, host='0.0.0.0', port=8000)
 
 API_key=os.getenv("API_key")
 
@@ -23,6 +21,21 @@ CORS(app)
 # Initialize the sentiment analysis pipeline
 analyzer = SentimentIntensityAnalyzer()
 # Function to fetch YouTube comments using the YouTube Data API
+def clean_text(text):
+    """
+    Removes HTML tags and unnecessary spaces from the provided text.
+
+    Parameters:
+    text (str): The text to clean.
+
+    Returns:
+    str: The cleaned text.
+    """
+    # Remove HTML tags
+    clean_text = re.sub(r'<.*?>', '', text)
+    # Remove extra spaces and strip text
+    clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+    return clean_text   
 def fetch_comments(video_id, api_key):
     youtube = build('youtube', 'v3', developerKey=api_key)
     comments = []
@@ -117,12 +130,29 @@ def analyze_comments_api():
     subscriber_count = channel_details["statistics"].get('subscriberCount',0)
     
     sentiment_results = analyze_sentiment_vadar(comments)
+    detailed_comments = []
+    for comment_text in comments:
+        cleaned_comment = clean_text(comment_text)
+        sentiment = analyzer.polarity_scores(cleaned_comment)
+        sentiment_label = 'neutral'
+        if sentiment['compound'] > 0.05:
+            sentiment_label = 'positive'
+        elif sentiment['compound'] < -0.05:
+            sentiment_label = 'negative'
+
+        detailed_comments.append({
+            'comment': cleaned_comment,
+            'sentiment': sentiment_label
+        })
+
     results ={
         "videoTitle": video_title,
         "likeCount": like_count,
         "commentCount": comment_count,
         "subscriberCount": subscriber_count,
-        "sentimentResults": sentiment_results
+        "sentimentResults": sentiment_results,
+        "detailedComments": detailed_comments  # No longer includes 'author' since it's not fetched
+
 
         
     }
