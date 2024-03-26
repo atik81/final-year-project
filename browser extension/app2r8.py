@@ -21,6 +21,21 @@ CORS(app)
 # Initialize the sentiment analysis pipeline
 analyzer = SentimentIntensityAnalyzer()
 # Function to fetch YouTube comments using the YouTube Data API
+def clean_text(text):
+    """
+    Removes HTML tags and unnecessary spaces from the provided text.
+
+    Parameters:
+    text (str): The text to clean.
+
+    Returns:
+    str: The cleaned text.
+    """
+    # Remove HTML tags
+    clean_text = re.sub(r'<.*?>', '', text)
+    # Remove extra spaces and strip text
+    clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+    return clean_text   
 def fetch_comments(video_id, api_key):
     youtube = build('youtube', 'v3', developerKey=api_key)
     comments = []
