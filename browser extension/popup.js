@@ -29,15 +29,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 })
                 .then(data => {
-                    console.log(data); // This will show you the entire response object
-                    if (data.results) {
-                        displayResults(data.results);
-                        drawSentimentAnalysisDonutChart(data.results.sentimentResults);
-                        displayComments(data.results.comments)
+                    console.log(data); // To inspect the structure
+                    if (data.results && data.results.detailedComments) {
+                        displayComments(data.results.detailedComments);
                     } else {
-                        document.getElementById('analyzeText').textContent = 'Error: ' + data.error;
+                        document.getElementById('analyzeText').textContent = 'Error: No comments found or incorrect data structure.';
                     }
                 })
+
+            .then(data => {
+                console.log(data); // This will show you the entire response object
+                if (data.results) {
+                    displayResults(data.results);
+                    drawSentimentAnalysisDonutChart(data.results.sentimentResults);
+                    displayComments(data.results.comments)
+                } else {
+                    document.getElementById('analyzeText').textContent = 'Error: ' + data.error;
+                }
+            })
 
 
             .catch(error => {
@@ -100,40 +109,45 @@ function displayResults(results, outputElement) {
 
 
 }
+const commentsContainer = document.getElementById('commentsContainer');
+
 
 function displayComments(comments) {
     const commentsContainer = document.getElementById('commentsContainer');
     commentsContainer.innerHTML = ''; // Clear the container before adding new comments
 
-    console.log('Received comments:', comments); // Log the comments array for debugging
-
     if (!comments || comments.length === 0) {
-        console.log('No comments or empty comments array detected.');
-        commentsContainer.textContent = 'No Comments found.';
-        return;
+        // No comments found, display the message
+        const noCommentsMessage = document.createElement('p');
+        noCommentsMessage.textContent = 'No Comments found.';
+        noCommentsMessage.style.textAlign = 'center';
+        commentsContainer.appendChild(noCommentsMessage);
+    } else {
+        // Comments exist, display them
+        comments.forEach(comment => {
+            const commentElement = document.createElement('div');
+            commentElement.classList.add('comment');
+
+            // Assuming commentText is an object with author, text, and sentiment properties
+            const authorElement = document.createElement('p');
+            authorElement.textContent = `Author: ${comment.author}`;
+            commentElement.appendChild(authorElement);
+
+            const textElement = document.createElement('p');
+            textElement.textContent = `Comment: ${comment.text}`;
+            commentElement.appendChild(textElement);
+
+            const sentimentElement = document.createElement('p');
+            sentimentElement.textContent = `Sentiment: ${comment.sentiment}`;
+            commentElement.appendChild(sentimentElement);
+
+            commentsContainer.appendChild(commentElement);
+        });
     }
-
-    comments.forEach(comment => {
-        console.log('Processing comment:', comment);
-        const commentElement = document.createElement('div');
-        commentElement.classList.add('comment');
-
-        const authorElement = document.createElement('p');
-        authorElement.textContent = `Author: ${comment.author}`; // Use backticks for template literals
-        commentElement.appendChild(authorElement);
-
-        const textElement = document.createElement('p');
-        textElement.textContent = `Comment: ${comment.text}`; // Use backticks for template literals
-        commentElement.appendChild(textElement);
-
-        const sentimentElement = document.createElement('p');
-        sentimentElement.textContent = `Sentiment: ${comment.sentiment}`; // Use backticks for template literals
-        commentElement.appendChild(sentimentElement);
-
-        commentsContainer.appendChild(commentElement);
-    });
 }
 
+// Directly after defining commentsContainer
+commentsContainer.innerHTML = '<p>Test Comment</p>';
 
 
 const legendRectSize = 18; // defines the size of the legend color box
@@ -146,9 +160,9 @@ function drawSentimentAnalysisDonutChart(sentimentResults) {
         return `${d.data.label}: ${percentage}%`; // Return label with percentage
     }
     const colors = {
-        positive: '#008000', // Correct hex code for green
+        positive: '#2ca02c', // Correct hex code for green
         neutral: '#0000FF', // Correct hex code for grey
-        negative: '#FF0000' // Correct hex code for red
+        negative: '#d62728' // Correct hex code for red
     };
 
     if (!sentimentResults || !sentimentResults.positive || !sentimentResults.neutral || !sentimentResults.negative) {
