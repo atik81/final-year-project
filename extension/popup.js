@@ -110,7 +110,7 @@ function displayComments(comments) {
     if (!comments || comments.length === 0) {
         // No comments found, display the message
         const noCommentsMessage = document.createElement('p');
-        noCommentsMessage.textContent = 'No Comments found.';
+        noCommentsMessage.textContent = 'hi.';
         noCommentsMessage.style.textAlign = 'center';
         commentsContainer.appendChild(noCommentsMessage);
     } else {
