@@ -1,0 +1,11 @@
+
+from flask import Flask, request
+from googleapiclient.discovery import build
+from transformers import pipeline
+from flask_cors import CORS
+import numpy as np
+import os
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from urllib.parse import urlparse, parse_qs
+from dotenv import load_dotenv
+from waitress import serve
