@@ -1,3 +1,5 @@
+const API_KEY = "AIzaSyD-DbMMeeRWh0w5x3OBsBYR_A4vQcoCmVQ";
+
 document.addEventListener('DOMContentLoaded', function() {
     const analyzeButton = document.getElementById('analyzeButton');
     if (commentsContainer) {
@@ -15,8 +17,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 return; // Legal use of return within a function
             }
 
-            const apiKey = 'AIzaSyCF4V_xVhqlffr-XxgbuX2ELdo93yZxqtM';
-            const requestUrl = `http://127.0.0.1:5000/analyze_comments?url=${encodeURIComponent(currentTabUrl)}&apiKey=${encodeURIComponent(apiKey)}`;
+            const videoId = getYoutubeId(currentTabUrl)
+            const video_comments_url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=${API_KEY}`
+            const requestUrl = `http://127.0.0.1:5000/analyze_comments?url=${encodeURIComponent(currentTabUrl)}&apiKey=${encodeURIComponent(API_KEY)}`;
+
 
             fetch(requestUrl)
                 .then(response => {
@@ -29,24 +33,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 })
                 .then(data => {
-                    console.log(data); // To inspect the structure
-                    if (data.results && data.results.detailedComments) {
-                        displayComments(data.results.detailedComments);
+                    console.log('data: ' + data); // This will show you the entire response object
+                    if (data.results) {
+                        displayResults(data.results);
+                        drawSentimentAnalysisDonutChart(data.results.sentimentResults);
+                        displayComments(video_comments_url)
                     } else {
-                        document.getElementById('analyzeText').textContent = 'Error: No comments found or incorrect data structure.';
+                        document.getElementById('analyzeText').textContent = 'Error: ' + data.error;
                     }
                 })
-
-            .then(data => {
-                console.log(data); // This will show you the entire response object
-                if (data.results) {
-                    displayResults(data.results);
-                    drawSentimentAnalysisDonutChart(data.results.sentimentResults);
-                    displayComments(data.results.comments)
-                } else {
-                    document.getElementById('analyzeText').textContent = 'Error: ' + data.error;
-                }
-            })
 
 
             .catch(error => {
@@ -112,39 +107,69 @@ function displayResults(results, outputElement) {
 const commentsContainer = document.getElementById('commentsContainer');
 
 
-function displayComments(comments) {
+async function displayComments(requestUrl) {
     const commentsContainer = document.getElementById('commentsContainer');
     commentsContainer.innerHTML = ''; // Clear the container before adding new comments
 
-    if (!comments || comments.length === 0) {
-        // No comments found, display the message
-        const noCommentsMessage = document.createElement('p');
-        noCommentsMessage.textContent = 'No Comments found.';
-        noCommentsMessage.style.textAlign = 'center';
-        commentsContainer.appendChild(noCommentsMessage);
-    } else {
-        // Comments exist, display them
-        comments.forEach(comment => {
+    let allComments = []; // To hold all fetched comments
+    let startIndex = 0; // Start index for slicing comments
+    const commentsPerPage = 10; // Number of comments to display at a time
+
+    try {
+        const response = await fetch(requestUrl);
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
+        allComments = data.items || []; // Assuming the API response has an 'items' key that contains comments
+
+        displayNextComments(); // Display the first set of comments
+
+    } catch (error) {
+        console.error('Error fetching comments:', error);
+        commentsContainer.textContent = 'Error fetching comments: ' + error.message;
+    }
+
+    function displayNextComments() {
+        const commentsToDisplay = allComments.slice(startIndex, startIndex + commentsPerPage);
+        startIndex += commentsPerPage; // Update start index for the next slice
+
+        if (commentsToDisplay.length === 0) {
+            if (startIndex === commentsPerPage) { // No comments found on the first try
+                commentsContainer.textContent = 'No comments found.';
+            }
+            return;
+        }
+
+        commentsToDisplay.forEach(commentItem => {
+            const comment = commentItem.snippet.topLevelComment.snippet; // Adjust based on the actual data structure
             const commentElement = document.createElement('div');
             commentElement.classList.add('comment');
 
-            // Assuming commentText is an object with author, text, and sentiment properties
             const authorElement = document.createElement('p');
-            authorElement.textContent = `Author: ${comment.author}`;
+            authorElement.textContent = `Author: ${comment.authorDisplayName}`;
             commentElement.appendChild(authorElement);
 
             const textElement = document.createElement('p');
-            textElement.textContent = `Comment: ${comment.text}`;
+            textElement.textContent = `Comment: ${comment.textDisplay}`;
             commentElement.appendChild(textElement);
-
-            const sentimentElement = document.createElement('p');
-            sentimentElement.textContent = `Sentiment: ${comment.sentiment}`;
-            commentElement.appendChild(sentimentElement);
 
             commentsContainer.appendChild(commentElement);
         });
+
+        if (startIndex < allComments.length) { // There are more comments to display
+            const seeMoreButton = document.createElement('button');
+            seeMoreButton.textContent = 'See More';
+            seeMoreButton.onclick = () => {
+                seeMoreButton.remove(); // Remove the see more button before displaying next set of comments
+                displayNextComments();
+            };
+
+            commentsContainer.appendChild(seeMoreButton);
+        }
     }
 }
+
 
 // Directly after defining commentsContainer
 commentsContainer.innerHTML = '<p>Test Comment</p>';
@@ -309,4 +334,25 @@ function drawSentimentAnalysisDonutChart(sentimentResults) {
         });
 
 
+}
+
+function getYoutubeId(url) {
+    const pattern = 'v=([A-Za-z0-9_-]+)';
+    const match = url.match(pattern);
+    return match ? match[1] : null;
+}
+
+
+async function fetchData(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        return data
+    } catch (error) {
+        console.error('Error:', error);
+        return error.json();
+    }
 }
