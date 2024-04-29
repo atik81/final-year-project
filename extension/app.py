@@ -202,8 +202,7 @@ def analyze_comments_api():
 
 
 if __name__ == '__main__':
-    # It's a good practice to not include your actual API key in your script.
-    # Consider using environment variables or other secure methods to handle them.
+    
     serve(app, host='0.0.0.0', port=8080)
 
     
