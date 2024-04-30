@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return; // Legal use of return within a function
             }
 
-            const apiKey = 'AIzaSyD-DbMMeeRWh0w5x3OBsBYR_A4vQcoCmVQ';
+            const apiKey = '***************';
             const requestUrl = `http://127.0.0.1:5000/analyze_comments?url=${encodeURIComponent(currentTabUrl)}&apiKey=${encodeURIComponent(apiKey)}`;
 
             fetch(requestUrl)
