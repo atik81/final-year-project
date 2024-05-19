@@ -1,3 +1,4 @@
+![Screenshot 2024-04-29 172525](https://github.com/atik81/final-year-project/assets/118019617/35291cf3-e934-4f26-88cd-c65a4ef0b70c)
 
 
 Flask Application Setup
