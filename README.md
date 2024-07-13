@@ -132,7 +132,9 @@ youtube-analyzer/
   - **Response**: JSON containing the summary of the video transcript.
 
 ## Screenshots
-
+![chorem](https://github.com/user-attachments/assets/f5201a53-378b-444b-8bc9-df80138c0392)
+![updated chorme](https://github.com/user-attachments/assets/402855e1-b4ac-4e04-a386-b9233af24494)
+![updated sssss](https://github.com/user-attachments/assets/3b943a3d-a877-4fc2-b560-9f3383320d22)
 
 ## Video Demo
 
