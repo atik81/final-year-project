@@ -135,4 +135,7 @@ youtube-analyzer/
 
 ## Video Demo
 
+https://github.com/user-attachments/assets/5a2bb239-fcf6-4901-adc6-8a608defc6bb
+
+
 
