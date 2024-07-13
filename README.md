@@ -45,9 +45,9 @@ This project is a Chrome extension designed to analyze YouTube videos by fetchin
 ### Backend Setup
 
 1. Clone the repository:
-   ```sh
+   ```[sh
    git clone https://github.com/your-username/youtube-analyzer.git
-   cd youtube-analyzer
+   cd youtube-analyzer](https://github.com/atik81/final-year-project.git)
    ```
 
 2. Create and activate a virtual environment:
