@@ -141,6 +141,7 @@ youtube-analyzer/
 https://github.com/user-attachments/assets/5a2bb239-fcf6-4901-adc6-8a608defc6bb
 
 ## Report 
+You can download and view the detailed report for this project .
 
 
 
