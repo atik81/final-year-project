@@ -1,56 +1,138 @@
 ![Screenshot 2024-04-29 172525](https://github.com/atik81/final-year-project/assets/118019617/35291cf3-e934-4f26-88cd-c65a4ef0b70c)
 
 
-Flask Application Setup
-First things first, let's get the Flask application up and running.
+Sure, here's a comprehensive README file for your YouTube Analyzer Chrome extension project without any AI-based content:
 
-#######       1st step  #########
- Environment Setup 
-Start by cloning the repository and setting up your environment:
-Create a .env file in the root directory.
+---
 
-Save your YouTube API key in the .env file 
+# YouTube Analyzer Chrome Extension
 
-API_key=***
+This project is a Chrome extension designed to analyze YouTube videos by fetching and analyzing comments for sentiment and summarizing video transcripts. It uses various technologies and APIs to achieve this, including Flask for the backend, Google APIs for data retrieval, and D3.js for visualizations.
 
-apiKey = '**'
-with the variable name API_KEY.
-Running the Flask App
-To start the Flask app, you'll need to run the following command from the root directory:   flask --app app run
+## Table of Contents
 
-###################### 3nd step #############
+- [Features](#features)
+- [Technologies Used](#technologies-used)
+- [Setup and Installation](#setup-and-installation)
+- [Usage](#usage)
+- [Folder Structure](#folder-structure)
+- [API Endpoints](#api-endpoints)
+- [Screenshots](#screenshots)
+- [Video Demo](#video-demo)
+- [License](#license)
 
-Virtual Environment (venv)
-Using a virtual environment is crucial for managing dependencies without affecting your global Python setup.
+## Features
 
-If you've just cloned the repository, set up a new virtual environment:
+- **Analyze YouTube Video Comments**: Fetch and analyze comments from YouTube videos to determine the overall sentiment (positive, neutral, negative).
+- **Summarize Video Transcripts**: Summarize the transcripts of YouTube videos.
+- **Visual Representations**: Display sentiment analysis results in a donut chart.
+- **Detailed Video Information**: Display video title, like count, comment count, and subscriber count.
 
-python -m venv venv
+## Technologies Used
 
-To activate the virtual environment, 
+- **Frontend**: HTML, CSS, JavaScript, D3.js
+- **Backend**: Flask
+- **APIs**: Google YouTube Data API, Google YouTube Transcript API
+- **Other Libraries**: VaderSentiment, Transformers
 
-venv/Scripts/Activate.ps1
+## Setup and Installation
 
-(This command might vary depending on your OS and shell)
-With the environment active, install the required packages:
+### Prerequisites
+
+- Python 3.x
+- Node.js and npm (for building the Chrome extension)
+
+### Backend Setup
+
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/your-username/youtube-analyzer.git
+   cd youtube-analyzer
+   ```
+
+2. Create and activate a virtual environment:
+   ```sh
+   python -m venv venv
+   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+   ```
+
+3. Install the dependencies:
+   ```sh
+   pip install -r requirements.txt
+   ```
+
+4. Set up environment variables. Create a `.env` file in the root directory and add your API key:
+   ```env
+   API_key=your_google_api_key
+   ```
+
+5. Run the Flask server:
+   ```sh
+   python app.py
+   ```
+
+### Frontend Setup
+
+1. Navigate to the `extension` folder:
+   ```sh
+   cd extension
+   ```
+
+2. Install npm dependencies:
+   ```sh
+   npm install
+   ```
+
+3. Build the extension:
+   ```sh
+   npm run build
+   ```
+
+4. Load the extension in Chrome:
+   - Open Chrome and go to `chrome://extensions/`.
+   - Enable Developer Mode.
+   - Click on "Load unpacked" and select the `extension` folder.
+
+## Usage
+
+1. Open a YouTube video in your browser.
+2. Click on the YouTube Analyzer extension icon.
+3. Click the "Analyze Video" button to fetch and analyze the comments.
+4. Click the "Summarize Video" button to get a summary of the video transcript.
+
+## Folder Structure
+
+```
+youtube-analyzer/
+├── app.py
+├── requirements.txt
+├── .env
+├── extension/
+│   ├── popup.html
+│   ├── popup.js
+│   ├── popup.css
+│   ├── summariser.js
+│   ├── d3.v6.min.js
+│   ├── manifest.json
+│   └── icons/
+│       ├── icons16.png
+│       ├── icons48.png
+│       └── icons128.png
+└── README.md
+```
+
+## API Endpoints
+
+- **GET /analyze_comments**: Fetch and analyze comments from a YouTube video.
+  - **Parameters**: `url` (YouTube video URL), `apiKey` (Google API key)
+  - **Response**: JSON containing video details and sentiment analysis results.
+
+- **GET /summarize_subtitles**: Summarize the subtitles of a YouTube video.
+  - **Parameters**: `url` (YouTube video URL)
+  - **Response**: JSON containing the summary of the video transcript.
+
+## Screenshots
+
+## Video Demo
 
 
-pip3 install -r requirements.txt
-
-
-Remember to navigate into the extension directory before starting the Flask app.
-
-
-############ last step############
-
-
-Chrome Extension Manual Upload
-To load the YouTube Video Analyzer Extension into Chrome, you'll need to:
-
-Open the Chrome Extensions page by navigating to chrome://extensions/ in your browser.
-Enable Developer mode by toggling the switch in the top-right corner.
-Click on Load unpacked and select the extension directory from your project files. This will manually load your extension into Chrome for testing and use.
-
-
-
-if you face any error for upload this file in extension you need to delete __pycache__ file from code i did this one security
